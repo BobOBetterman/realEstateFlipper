@@ -1,6 +1,10 @@
 library(lubridate)
 
-setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+# work computer address
+#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+# home computer address
+setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
+
 
 propListings <- read.csv("flipperStats.csv", stringsAsFactors = FALSE)
 
@@ -43,3 +47,16 @@ oneMonth <- Sys.Date() - months(1)
 propSoldOneYear <- propListings[propListings[,13] >= oneYear, ]
 propSoldSixMonths <- propListings[propListings[,13] >= sixMonths, ]
 propSoldOneMonth <- propListings[propListings[,13] >= oneMonth, ]
+
+
+# Use the "FD" method for making histograms
+
+#meanOneYear <- numeric()
+#for(i in 1:25) {
+#   meanOneYear[i] <- mean(propSoldOneYear[propSoldOneYear[,22] >= (i*1000) & propSoldOneYear[,22] < ((i+1)*1000), 25])
+# }
+
+meanOverTime <- numeric()
+meanOverTime[1] <- mean(propSoldOneYear[,25])
+meanOverTime[2] <- mean(propSoldSixMonths[,25])
+meanOverTime[3] <- mean(propSoldOneMonth[,25])
