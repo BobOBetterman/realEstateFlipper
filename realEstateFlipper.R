@@ -1,15 +1,15 @@
 library(lubridate)
 
 # work computer address
-setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 # home computer address
-#setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
+setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 
 # Constants for the program
 
 # The ratio of house square footage / lot size
-houseRatio <- 0.4
+houseRatio <- numeric()
 
 # The cost/sqft to build a new place
 newConsCostSqFt <- 200
@@ -37,10 +37,16 @@ names(propListings)[24] <- "sell.Price.Num"
 propListings[ , 25] <- propListings[ , 24] / propListings[ , 21]
 names(propListings)[25] <- "$/SqFt.House.Num"
 
+propListings[,26] <- (gsub(",", "", as.character(propListings[,7])))
+propListings[,26] <- as.numeric(gsub("\\$", "", as.character(propListings[,26])))
+names(propListings)[26] <- "list.Price.Num"
+
 # Use loess to fit a line to the scatter plot.
 
 # Looks like the right ratio is 0.375. Victor likes 0.41, but I think he's
 # ignoring the data.
+
+# Switching to a completely data driven approach to determine the right ratio.
 
 # Cleaning data
 
@@ -51,6 +57,19 @@ propListings[,13] <- as.Date(propListings[,13], "%m/%d/%Y")
 propListingsSold <- propListings[complete.cases(propListings[,24]),]
 
 propListingsSold <- propListingsSold[complete.cases(propListingsSold),]
+
+# This is the calculation to figure out the proper ratio of house to lot size to build.
+
+# First, figure out the most expensive 5% of houses:
+mostExp5Per <- quantile(propListingsSold[,25], probs = 0.95)
+mostExpRatios <- propListingsSold[propListingsSold[,25] >= mostExp5Per, 23]
+
+# Once you have the list of size ratios associated with the most expensive $/sqft, figure out the mean value:
+mostExpHouseRatio <- mean(mostExpRatios)
+
+# Assign that value to the house ratio constant
+houseRatio <- mostExpHouseRatio
+
 
 # lubridate to change date: Sys.Date() - years(1)
 oneYear <- Sys.Date() - years(1)
@@ -92,5 +111,32 @@ propListings$Zoning <- factor(propListings$Zoning)
 
 propListingsActive <- propListings[propListings$Status == "Active", ]
 
-propListingsActive[,26] <- propListingsActive$lotSqFt * houseRatio
-names(propListingsActive)[26] <- "houseSizeSqFt"
+propListingsActive[,27] <- propListingsActive$lotSqFt * houseRatio
+names(propListingsActive)[27] <- "houseSizeSqFt"
+
+# Add a column for figuring out cost to build a new house
+
+propListingsActive[,28] <- propListingsActive$houseSqFt * newConsCostSqFt
+names(propListingsActive)[28] <- "costToBuildHouse"
+
+# Figure out cost to buy the place and build a new house
+
+propListingsActive[,29] <- propListingsActive[,26] + propListingsActive[,28]
+names(propListingsActive)[29] <- "totalCostToBuild"
+
+# Predicted sale price of newly built house.
+# Figure out the predicted $/sqft by using a combination of the 1 month, 6 month, and 1 year values.
+
+predPrice <- (highest95[1] + 2*highest95[2] + 3*highest95[3]) / 6
+
+propListingsActive[,30] <- propListingsActive[,27] * predPrice
+names(propListingsActive)[30] <- "predictedSalePrice"
+
+# Figure out potential profit by comparing the difference between the predicted price and cost to build
+
+propListingsActive[,31] <- propListingsActive[,30] - propListingsActive[,29]
+names(propListingsActive)[31] <- "potentialProfit"
+
+# Sort the listings to see which are the most profitable
+
+propListingsActive <- propListingsActive[order(-propListingsActive[,31]), ]
