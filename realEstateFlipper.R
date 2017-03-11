@@ -1,9 +1,9 @@
 library(lubridate)
 
 # work computer address
-#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 # home computer address
-setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
+#setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 
 # Constants for the program
@@ -12,7 +12,7 @@ setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 houseRatio <- numeric()
 
 # The cost/sqft to build a new place
-newConsCostSqFt <- 200
+newConsCostSqFt <- 250
 
 
 
@@ -21,25 +21,32 @@ newConsCostSqFt <- 200
 
 propListings <- read.csv("flipperStats.csv", stringsAsFactors = FALSE)
 
-propListings[ , 21] <- as.numeric(gsub(",", "", as.character(propListings[ , 15])))
-names(propListings)[21] <- "houseSqFt"
-propListings[ , 22] <- as.numeric(gsub(",", "", as.character(propListings[ , 9])))
-names(propListings)[22] <- "lotSqFt"
+propListings[ , 25] <- as.numeric(gsub(",", "", as.character(propListings[ , 19])))
+names(propListings)[25] <- "houseSqFt"
+propListings[ , 26] <- as.numeric(gsub(",", "", as.character(propListings[ , 12])))
+names(propListings)[26] <- "lotSqFt"
 
 
-propListings[ , 23] <- propListings[ , 21] / propListings[ , 22]
-names(propListings)[23] <- "house.To.Lot.Size.Ratio"
+propListings[ , 27] <- propListings[ , 25] / propListings[ , 26]
+names(propListings)[27] <- "house.To.Lot.Size.Ratio"
 
-propListings[,24] <- (gsub(",", "", as.character(propListings[,14])))
-propListings[,24] <- as.numeric(gsub("\\$", "", as.character(propListings[,24])))
-names(propListings)[24] <- "sell.Price.Num"
+propListings[,28] <- (gsub(",", "", as.character(propListings[,18])))
+propListings[,28] <- as.numeric(gsub("\\$", "", as.character(propListings[,28])))
+names(propListings)[28] <- "sell.Price.Num"
 
-propListings[ , 25] <- propListings[ , 24] / propListings[ , 21]
-names(propListings)[25] <- "$/SqFt.House.Num"
+propListings[ , 29] <- propListings[ , 28] / propListings[ , 25]
+names(propListings)[29] <- "$/SqFt.House.Num"
 
-propListings[,26] <- (gsub(",", "", as.character(propListings[,7])))
-propListings[,26] <- as.numeric(gsub("\\$", "", as.character(propListings[,26])))
-names(propListings)[26] <- "list.Price.Num"
+propListings[,30] <- (gsub(",", "", as.character(propListings[,10])))
+propListings[,30] <- as.numeric(gsub("\\$", "", as.character(propListings[,30])))
+names(propListings)[30] <- "list.Price.Num"
+
+# Eliminate all the listings with HOA fees, as they are probably
+# mistakenly listed as detached single family homes
+
+propListings$HOA.Fee <- as.numeric(gsub(",", "", as.character(propListings$HOA.Fee)))
+
+propListings <- propListings[propListings$HOA.Fee == 0 | is.na(propListings$HOA.Fee),]
 
 # Use loess to fit a line to the scatter plot.
 
@@ -50,35 +57,52 @@ names(propListings)[26] <- "list.Price.Num"
 
 # Cleaning data
 
-propListings[,8] <- as.Date(propListings[,8], "%m/%d/%Y")
-propListings[,13] <- as.Date(propListings[,13], "%m/%d/%Y")
+propListings[,11] <- as.Date(propListings[,11], "%m/%d/%Y")
+propListings[,17] <- as.Date(propListings[,17], "%m/%d/%Y")
 
 # Remove all the properties that don't have a "sold" price
-propListingsSold <- propListings[complete.cases(propListings[,24]),]
+propListingsSold <- propListings[complete.cases(propListings[,28]),]
+
+propListingsSold$HOA.Fee <- 0
 
 propListingsSold <- propListingsSold[complete.cases(propListingsSold),]
 
 # This is the calculation to figure out the proper ratio of house to lot size to build.
 
+# Even before that first thing written below, we'll filter out the smaller
+# lot sizes. Victor thinks this will help us get the proper size ratio.
+# So, everything with a lot size of less than 8000 sqft goes.
+
+propListSoldBig <- propListingsSold[propListingsSold$lotSqFt >= 2500, ]
+
 # First, figure out the most expensive 5% of houses:
-mostExp5Per <- quantile(propListingsSold[,25], probs = 0.95)
-mostExpRatios <- propListingsSold[propListingsSold[,25] >= mostExp5Per, 23]
+#mostExp5Per <- quantile(propListSoldBig[,27], probs = 0.95)
+#mostExpRatios <- propListSoldBig[propListSoldBig[,27] >= mostExp5Per, 25]
 
 # Once you have the list of size ratios associated with the most expensive $/sqft, figure out the mean value:
-mostExpHouseRatio <- mean(mostExpRatios)
+#mostExpHouseRatio <- mean(mostExpRatios)
+
+# Rather than the above, just find the biggest possible ratio on everything
+# with a lot size bigger than 8000 sqft
 
 # Assign that value to the house ratio constant
-houseRatio <- mostExpHouseRatio
+#houseRatio <- mostExpHouseRatio
 
+houseRatio <- quantile(propListSoldBig$house.To.Lot.Size.Ratio, probs = 0.9)
 
 # lubridate to change date: Sys.Date() - years(1)
 oneYear <- Sys.Date() - years(1)
 sixMonths <- Sys.Date() - months(6)
 oneMonth <- Sys.Date() - months(1)
 
-propSoldOneYear <- propListingsSold[propListingsSold[,13] >= oneYear, ]
-propSoldSixMonths <- propListingsSold[propListingsSold[,13] >= sixMonths, ]
-propSoldOneMonth <- propListingsSold[propListingsSold[,13] >= oneMonth, ]
+# Select only houses on lots over 8000 sqft, and that are less
+# than a year old. Than check the sale prices on those houses.
+
+propListSoldBigNew <- propListSoldBig[propListSoldBig$Age <= 3, ]
+
+propSoldOneYear <- propListSoldBigNew[propListSoldBigNew[,17] >= oneYear, ]
+propSoldSixMonths <- propListSoldBigNew[propListSoldBigNew[,17] >= sixMonths, ]
+propSoldOneMonth <- propListSoldBigNew[propListSoldBigNew[,17] >= oneMonth, ]
 
 
 # Use the "FD" method for making histograms
@@ -89,16 +113,16 @@ propSoldOneMonth <- propListingsSold[propListingsSold[,13] >= oneMonth, ]
 # }
 
 meanOverTime <- numeric()
-meanOverTime[1] <- mean(propSoldOneYear[,25])
-meanOverTime[2] <- mean(propSoldSixMonths[,25])
-meanOverTime[3] <- mean(propSoldOneMonth[,25])
+meanOverTime[1] <- mean(propSoldOneYear[,29])
+meanOverTime[2] <- mean(propSoldSixMonths[,29])
+meanOverTime[3] <- mean(propSoldOneMonth[,29])
 
 # Find highest priced sales (95% quantile)
 
 highest95 <- numeric()
-highest95[1] <- quantile(propSoldOneYear[,25], probs = .95)
-highest95[2] <- quantile(propSoldSixMonths[,25], probs = .95)
-highest95[3] <- quantile(propSoldOneMonth[,25], probs = .95)
+highest95[1] <- quantile(propSoldOneYear[,29], probs = .95)
+highest95[2] <- quantile(propSoldSixMonths[,29], probs = .95)
+highest95[3] <- quantile(propSoldOneMonth[,29], probs = .95)
 
 
 # Done with initial calculations.
@@ -111,32 +135,53 @@ propListings$Zoning <- factor(propListings$Zoning)
 
 propListingsActive <- propListings[propListings$Status == "Active", ]
 
-propListingsActive[,27] <- propListingsActive$lotSqFt * houseRatio
-names(propListingsActive)[27] <- "houseSizeSqFt"
+propListingsActive[,31] <- propListingsActive$lotSqFt * houseRatio
+names(propListingsActive)[31] <- "houseSizeSqFt"
 
 # Add a column for figuring out cost to build a new house
 
-propListingsActive[,28] <- propListingsActive$houseSqFt * newConsCostSqFt
-names(propListingsActive)[28] <- "costToBuildHouse"
+propListingsActive[,32] <- propListingsActive$houseSizeSqFt * newConsCostSqFt
+names(propListingsActive)[32] <- "costToBuildHouse"
 
 # Figure out cost to buy the place and build a new house
 
-propListingsActive[,29] <- propListingsActive[,26] + propListingsActive[,28]
-names(propListingsActive)[29] <- "totalCostToBuild"
+propListingsActive[,33] <- propListingsActive[,30] + propListingsActive[,32]
+names(propListingsActive)[33] <- "totalCostToBuild"
 
 # Predicted sale price of newly built house.
 # Figure out the predicted $/sqft by using a combination of the 1 month, 6 month, and 1 year values.
 
-predPrice <- (highest95[1] + 2*highest95[2] + 3*highest95[3]) / 6
+# This figures out the predicted price based on the highest prices
+#predPrice <- (highest95[1] + 2*highest95[2] + 3*highest95[3]) / 6
 
-propListingsActive[,30] <- propListingsActive[,27] * predPrice
-names(propListingsActive)[30] <- "predictedSalePrice"
+# This figures out the price based on new construction on big lot sizes
+# Use only this one or the above--not both
+
+#predPrice <- (meanOverTime[1] + 2*meanOverTime[2] + 3*meanOverTime[3]) / 6
+
+#predPrice <- (meanOverTime[1] + 2*meanOverTime[2]) / 3
+
+predPrice <- meanOverTime[1]
+
+# Deduct 7% for commission, fees, etc.
+
+predPriceFinal <- predPrice * 0.93
+
+propListingsActive[,34] <- propListingsActive[,31] * predPriceFinal
+names(propListingsActive)[34] <- "predictedSalePrice"
 
 # Figure out potential profit by comparing the difference between the predicted price and cost to build
 
-propListingsActive[,31] <- propListingsActive[,30] - propListingsActive[,29]
-names(propListingsActive)[31] <- "potentialProfit"
+propListingsActive[,35] <- propListingsActive[,34] - propListingsActive[,33]
+names(propListingsActive)[35] <- "potentialProfit"
 
 # Sort the listings to see which are the most profitable
 
-propListingsActive <- propListingsActive[order(-propListingsActive[,31]), ]
+#propListingsActive <- propListingsActive[order(-propListingsActive[,34]), ]
+
+# Sort by the profit percentage instead
+
+propListingsActive[,36] <- propListingsActive$potentialProfit / propListingsActive$totalCostToBuild
+names(propListingsActive)[36] <- "profitPercentOfInvestment"
+
+propListingsActive <- propListingsActive[order(-propListingsActive[,36]), ]
