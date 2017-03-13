@@ -1,18 +1,21 @@
 library(lubridate)
 
 # work computer address
-setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 # home computer address
-#setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
+setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 
 # Constants for the program
 
 # The ratio of house square footage / lot size
-houseRatio <- numeric()
+#houseRatio <- numeric()
 
 # The cost/sqft to build a new place
 newConsCostSqFt <- 250
+
+# Necessary number of samples to be statistically significant
+minSampleSize <- 9
 
 
 
@@ -67,13 +70,40 @@ propListingsSold$HOA.Fee <- 0
 
 propListingsSold <- propListingsSold[complete.cases(propListingsSold),]
 
+propListingsSold <- propListingsSold[propListingsSold$lotSqFt>0,]
+propListingsSold <- propListingsSold[propListingsSold$houseSqFt>0,]
+
+# Figure out the stats for each area (Area > Zip Code > City > County)
+# I figure... Go back one month at a time, up to a year, to get a statistical large enough sampling.
+# Never mind--just do one year for each category, make sure there are at least 10 points, then do the check.
+# If there aren't enough in a category, go up to the next largest group and repeat.
+
+houseRatioByArea <- aggregate(propListingsSold$house.To.Lot.Size.Ratio, list(propListingsSold$Area..), FUN = quantile, probs = 0.9)
+houseRatioByArea <- merge(houseRatioByArea, table(factor(propListingsSold$Area..)), by.x = "Group.1", by.y = "Var1")
+houseRatioByZip <- aggregate(propListingsSold$house.To.Lot.Size.Ratio, list(propListingsSold$Zip.Code), FUN = quantile, probs = 0.9)
+houseRatioByZip <- merge(houseRatioByZip, table(factor(propListingsSold$Zip.Code)), by.x = "Group.1", by.y = "Var1")
+houseRatioByCity <- aggregate(propListingsSold$house.To.Lot.Size.Ratio, list(propListingsSold$Postal.City), FUN = quantile, probs = 0.9)
+houseRatioByCity <- merge(houseRatioByCity, table(factor(propListingsSold$Postal.City)), by.x = "Group.1", by.y = "Var1")
+#houseRatioByCounty <- aggregate(propListingsSold$house.To.Lot.Size.Ratio, list(propListingsSold$Area..), FUN = quantile, probs = 0.9)
+
+
+# Figure out the biggest possible house in the area--this will put a cap on the biggest build size.
+
+houseSizeCap <- aggregate(propListingsSold$houseSqFt, list(propListingsSold$Area..), FUN = max)
+
+# Also, figure out the highest sale price in the area to cap the sale price, as well -- the 0.93 is for fees
+
+housePriceCap <- aggregate(propListingsSold$sell.Price.Num, list(propListingsSold$Area..), FUN = max)
+
+housePriceCap[,2] <- housePriceCap[,2] * 0.93
+
 # This is the calculation to figure out the proper ratio of house to lot size to build.
 
 # Even before that first thing written below, we'll filter out the smaller
 # lot sizes. Victor thinks this will help us get the proper size ratio.
-# So, everything with a lot size of less than 8000 sqft goes.
+# So, everything with a lot size of less than 2500 sqft goes.
 
-propListSoldBig <- propListingsSold[propListingsSold$lotSqFt >= 2500, ]
+#propListSoldBig <- propListingsSold[propListingsSold$lotSqFt >= 2500, ]
 
 # First, figure out the most expensive 5% of houses:
 #mostExp5Per <- quantile(propListSoldBig[,27], probs = 0.95)
@@ -88,21 +118,21 @@ propListSoldBig <- propListingsSold[propListingsSold$lotSqFt >= 2500, ]
 # Assign that value to the house ratio constant
 #houseRatio <- mostExpHouseRatio
 
-houseRatio <- quantile(propListSoldBig$house.To.Lot.Size.Ratio, probs = 0.9)
+#houseRatio <- quantile(propListSoldBig$house.To.Lot.Size.Ratio, probs = 0.9)
 
 # lubridate to change date: Sys.Date() - years(1)
 oneYear <- Sys.Date() - years(1)
-sixMonths <- Sys.Date() - months(6)
-oneMonth <- Sys.Date() - months(1)
+#sixMonths <- Sys.Date() - months(6)
+#oneMonth <- Sys.Date() - months(1)
 
-# Select only houses on lots over 8000 sqft, and that are less
-# than a year old. Than check the sale prices on those houses.
+# Select only houses on lots over 2500 sqft, and that are less
+# than three years old. Than check the sale prices on those houses.
 
-propListSoldBigNew <- propListSoldBig[propListSoldBig$Age <= 3, ]
+propListSoldNew <- propListingsSold[propListingsSold$Age <= 9, ]
 
-propSoldOneYear <- propListSoldBigNew[propListSoldBigNew[,17] >= oneYear, ]
-propSoldSixMonths <- propListSoldBigNew[propListSoldBigNew[,17] >= sixMonths, ]
-propSoldOneMonth <- propListSoldBigNew[propListSoldBigNew[,17] >= oneMonth, ]
+propSoldOneYear <- propListSoldNew[propListSoldNew[,17] >= oneYear, ]
+#propSoldSixMonths <- propListSoldBigNew[propListSoldBigNew[,17] >= sixMonths, ]
+#propSoldOneMonth <- propListSoldBigNew[propListSoldBigNew[,17] >= oneMonth, ]
 
 
 # Use the "FD" method for making histograms
@@ -112,17 +142,22 @@ propSoldOneMonth <- propListSoldBigNew[propListSoldBigNew[,17] >= oneMonth, ]
 #   meanOneYear[i] <- mean(propSoldOneYear[propSoldOneYear[,22] >= (i*1000) & propSoldOneYear[,22] < ((i+1)*1000), 25])
 # }
 
-meanOverTime <- numeric()
-meanOverTime[1] <- mean(propSoldOneYear[,29])
-meanOverTime[2] <- mean(propSoldSixMonths[,29])
-meanOverTime[3] <- mean(propSoldOneMonth[,29])
+#meanOverTime <- numeric()
+meanLastYearArea <- aggregate(propSoldOneYear[,29], list(propSoldOneYear$Area..), FUN = mean)
+meanLastYearArea <- merge(meanLastYearArea, table(factor(propSoldOneYear$Area..)), by.x = "Group.1", by.y = "Var1")
+meanLastYearZip <- aggregate(propSoldOneYear[,29], list(propSoldOneYear$Zip.Code), FUN = mean)
+meanLastYearZip <- merge(meanLastYearZip, table(factor(propSoldOneYear$Zip.Code)), by.x = "Group.1", by.y = "Var1")
+meanLastYearCity <- aggregate(propSoldOneYear[,29], list(propSoldOneYear$Postal.City), FUN = mean)
+meanLastYearCity <- merge(meanLastYearCity, table(factor(propSoldOneYear$Postal.City)), by.x = "Group.1", by.y = "Var1")
+#meanOverTime[2] <- mean(propSoldSixMonths[,29])
+#meanOverTime[3] <- mean(propSoldOneMonth[,29])
 
 # Find highest priced sales (95% quantile)
 
-highest95 <- numeric()
-highest95[1] <- quantile(propSoldOneYear[,29], probs = .95)
-highest95[2] <- quantile(propSoldSixMonths[,29], probs = .95)
-highest95[3] <- quantile(propSoldOneMonth[,29], probs = .95)
+#highest95 <- numeric()
+#highest95[1] <- quantile(propSoldOneYear[,29], probs = .95)
+#highest95[2] <- quantile(propSoldSixMonths[,29], probs = .95)
+#highest95[3] <- quantile(propSoldOneMonth[,29], probs = .95)
 
 
 # Done with initial calculations.
@@ -135,18 +170,54 @@ propListings$Zoning <- factor(propListings$Zoning)
 
 propListingsActive <- propListings[propListings$Status == "Active", ]
 
-propListingsActive[,31] <- propListingsActive$lotSqFt * houseRatio
-names(propListingsActive)[31] <- "houseSizeSqFt"
+# This determines the proper house size ratio to use (making sure the numbers of samples are high enough)
+
+propListingsActive[,31] <- ifelse(houseRatioByArea[match(propListingsActive$Area.., houseRatioByArea$Group.1),3]>minSampleSize & 
+                                    !is.na(houseRatioByArea[match(propListingsActive$Area.., houseRatioByArea$Group.1),3]>minSampleSize),
+                                  houseRatioByArea[match(propListingsActive$Area.., houseRatioByArea$Group.1),2],
+                                  ifelse(houseRatioByZip[match(propListingsActive$Zip.Code, houseRatioByZip$Group.1),3]>minSampleSize & 
+                                           !is.na(houseRatioByZip[match(propListingsActive$Zip.Code, houseRatioByZip$Group.1),3]>minSampleSize),
+                                         houseRatioByZip[match(propListingsActive$Zip.Code, houseRatioByZip$Group.1),2],
+                                         ifelse(houseRatioByCity[match(propListingsActive$Postal.City, houseRatioByCity$Group.1),3]>minSampleSize & 
+                                                  !is.na(houseRatioByCity[match(propListingsActive$Postal.City, houseRatioByCity$Group.1),3]>minSampleSize),
+                                                houseRatioByCity[match(propListingsActive$Postal.City, houseRatioByCity$Group.1),2], 1000)))
+
+names(propListingsActive)[31] <- "houseRatioNewBuild"
+
+# This determines the proper $/sf to use (making sure the numbers of samples are high enough)
+
+propListingsActive[,32] <- ifelse(meanLastYearArea[match(propListingsActive$Area.., meanLastYearArea$Group.1),3]>minSampleSize & 
+                                    !is.na(meanLastYearArea[match(propListingsActive$Area.., meanLastYearArea$Group.1),3]>minSampleSize),
+                                  meanLastYearArea[match(propListingsActive$Area.., meanLastYearArea$Group.1),2],
+                                  ifelse(meanLastYearZip[match(propListingsActive$Zip.Code, meanLastYearZip$Group.1),3]>minSampleSize & 
+                                           !is.na(meanLastYearZip[match(propListingsActive$Zip.Code, meanLastYearZip$Group.1),3]>minSampleSize),
+                                         meanLastYearZip[match(propListingsActive$Zip.Code, meanLastYearZip$Group.1),2],
+                                         ifelse(meanLastYearCity[match(propListingsActive$Postal.City, meanLastYearCity$Group.1),3]>minSampleSize & 
+                                                  !is.na(meanLastYearCity[match(propListingsActive$Postal.City, meanLastYearCity$Group.1),3]>minSampleSize),
+                                                meanLastYearCity[match(propListingsActive$Postal.City, meanLastYearCity$Group.1),2], 1000000)))
+# propListingsActive[,32] <- if(meanLastYearArea[match(propListingsActive$Area.., meanLastYearArea$Group.1),3]>minSampleSize) {
+#                                   meanLastYearArea[match(propListingsActive$Area.., meanLastYearArea$Group.1),2]} else {
+#                                   if(meanLastYearZip[match(propListingsActive$Zip.Code, meanLastYearZip$Group.1),3]>minSampleSize) {
+#                                          meanLastYearZip[match(propListingsActive$Zip.Code, meanLastYearZip$Group.1),2]} else {
+#                                          if(meanLastYearCity[match(propListingsActive$Postal.City, meanLastYearCity$Group.1),3]>minSampleSize) {
+#                                                 meanLastYearCity[match(propListingsActive$Postal.City, meanLastYearCity$Group.1),2]} else 1000}}
+names(propListingsActive)[32] <- "houseDollarPerSFNewBuild"
+
+# This is the size of house that can be built
+
+# propListingsActive[,33] <- pmin(propListingsActive$lotSqFt * houseRatio, houseSizeCap[match(propListingsActive$Area.., houseSizeCap$Group.1),2])
+propListingsActive[,33] <- pmin(propListingsActive$lotSqFt * propListingsActive$houseRatioNewBuild, houseSizeCap[match(propListingsActive$Area.., houseSizeCap$Group.1),2])
+names(propListingsActive)[33] <- "houseSizeSqFt"
 
 # Add a column for figuring out cost to build a new house
 
-propListingsActive[,32] <- propListingsActive$houseSizeSqFt * newConsCostSqFt
-names(propListingsActive)[32] <- "costToBuildHouse"
+propListingsActive[,34] <- propListingsActive$houseSizeSqFt * newConsCostSqFt
+names(propListingsActive)[34] <- "costToBuildHouse"
 
 # Figure out cost to buy the place and build a new house
 
-propListingsActive[,33] <- propListingsActive[,30] + propListingsActive[,32]
-names(propListingsActive)[33] <- "totalCostToBuild"
+propListingsActive[,35] <- propListingsActive[,30] + propListingsActive[,34]
+names(propListingsActive)[35] <- "totalCostToBuild"
 
 # Predicted sale price of newly built house.
 # Figure out the predicted $/sqft by using a combination of the 1 month, 6 month, and 1 year values.
@@ -161,19 +232,21 @@ names(propListingsActive)[33] <- "totalCostToBuild"
 
 #predPrice <- (meanOverTime[1] + 2*meanOverTime[2]) / 3
 
-predPrice <- meanOverTime[1]
+#predPrice <- meanLastYearArea[1,2]
 
 # Deduct 7% for commission, fees, etc.
 
-predPriceFinal <- predPrice * 0.93
+#predPriceFinal <- predPrice * 0.93
 
-propListingsActive[,34] <- propListingsActive[,31] * predPriceFinal
-names(propListingsActive)[34] <- "predictedSalePrice"
+predPriceFinal <- propListingsActive$houseDollarPerSFNewBuild * 0.93
+
+propListingsActive[,36] <- pmin(propListingsActive[,33] * predPriceFinal, housePriceCap[match(propListingsActive$Area.., houseSizeCap$Group.1),2])
+names(propListingsActive)[36] <- "predictedSalePrice"
 
 # Figure out potential profit by comparing the difference between the predicted price and cost to build
 
-propListingsActive[,35] <- propListingsActive[,34] - propListingsActive[,33]
-names(propListingsActive)[35] <- "potentialProfit"
+propListingsActive[,37] <- propListingsActive[,36] - propListingsActive[,35]
+names(propListingsActive)[37] <- "potentialProfit"
 
 # Sort the listings to see which are the most profitable
 
@@ -181,7 +254,7 @@ names(propListingsActive)[35] <- "potentialProfit"
 
 # Sort by the profit percentage instead
 
-propListingsActive[,36] <- propListingsActive$potentialProfit / propListingsActive$totalCostToBuild
-names(propListingsActive)[36] <- "profitPercentOfInvestment"
+propListingsActive[,38] <- propListingsActive$potentialProfit / propListingsActive$totalCostToBuild
+names(propListingsActive)[38] <- "profitPercentOfInvestment"
 
-propListingsActive <- propListingsActive[order(-propListingsActive[,36]), ]
+propListingsActive <- propListingsActive[order(-propListingsActive[,38]), ]
