@@ -1,9 +1,15 @@
+# This program can be run anytime. It doesn't change any files. It just loads in the database
+# stored in "flipperAll.csv" and crunches the numbers on all "Active" listings. It then outputs a report
+# titled "currentProspectsReport.csv" which contains all the prospects currently listed in the
+# full database.
+
+
 library(lubridate)
 
 # work computer address
-setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 # home computer address
-#setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
+setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 
 # Constants for the program
@@ -17,34 +23,39 @@ newConsCostSqFt <- 250
 # Necessary number of samples to be statistically significant
 minSampleSize <- 9
 
+# This is the lowest percentage of profit we're willing to risk investing for
+lowestProfit <- 0.1
 
 
 
 # Start of sold property data analysis
 
+# This can be used for a self-contained file (i.e., five years of data on one city)
 #propListings <- read.csv("flipperStats.csv", stringsAsFactors = FALSE)
 
+# This is the file that contains all the different download files from the MLS site--obtained 
+# by running the combineFlipperStats.R program
 propListings <- read.csv("flipperAll.csv", stringsAsFactors = FALSE)
 
-propListings[ , 25] <- as.numeric(gsub(",", "", as.character(propListings[ , 19])))
-names(propListings)[25] <- "houseSqFt"
-propListings[ , 26] <- as.numeric(gsub(",", "", as.character(propListings[ , 12])))
-names(propListings)[26] <- "lotSqFt"
+propListings[ , 26] <- as.numeric(gsub(",", "", as.character(propListings[ , 20])))
+names(propListings)[26] <- "houseSqFt"
+propListings[ , 27] <- as.numeric(gsub(",", "", as.character(propListings[ , 13])))
+names(propListings)[27] <- "lotSqFt"
 
 
-propListings[ , 27] <- propListings[ , 25] / propListings[ , 26]
-names(propListings)[27] <- "house.To.Lot.Size.Ratio"
+propListings[ , 28] <- propListings[ , 26] / propListings[ , 27]
+names(propListings)[28] <- "house.To.Lot.Size.Ratio"
 
-propListings[,28] <- (gsub(",", "", as.character(propListings[,18])))
-propListings[,28] <- as.numeric(gsub("\\$", "", as.character(propListings[,28])))
-names(propListings)[28] <- "sell.Price.Num"
+propListings[,29] <- (gsub(",", "", as.character(propListings[,19])))
+propListings[,29] <- as.numeric(gsub("\\$", "", as.character(propListings[,29])))
+names(propListings)[29] <- "sell.Price.Num"
 
-propListings[ , 29] <- propListings[ , 28] / propListings[ , 25]
-names(propListings)[29] <- "$/SqFt.House.Num"
+propListings[ , 30] <- propListings[ , 29] / propListings[ , 26]
+names(propListings)[30] <- "$/SqFt.House.Num"
 
-propListings[,30] <- (gsub(",", "", as.character(propListings[,10])))
-propListings[,30] <- as.numeric(gsub("\\$", "", as.character(propListings[,30])))
-names(propListings)[30] <- "list.Price.Num"
+propListings[,31] <- (gsub(",", "", as.character(propListings[,11])))
+propListings[,31] <- as.numeric(gsub("\\$", "", as.character(propListings[,31])))
+names(propListings)[31] <- "list.Price.Num"
 
 # Eliminate all the listings with HOA fees, as they are probably
 # mistakenly listed as detached single family homes
@@ -62,11 +73,11 @@ propListings <- propListings[propListings$HOA.Fee == 0 | is.na(propListings$HOA.
 
 # Cleaning data
 
-propListings[,11] <- as.Date(propListings[,11], "%m/%d/%Y")
-propListings[,17] <- as.Date(propListings[,17], "%m/%d/%Y")
+propListings[,12] <- as.Date(propListings[,12], "%m/%d/%Y")
+propListings[,18] <- as.Date(propListings[,18], "%m/%d/%Y")
 
 # Remove all the properties that don't have a "sold" price
-propListingsSold <- propListings[complete.cases(propListings[,28]),]
+propListingsSold <- propListings[complete.cases(propListings[,29]),]
 
 propListingsSold$HOA.Fee <- 0
 
@@ -86,6 +97,8 @@ houseRatioByZip <- aggregate(propListingsSold$house.To.Lot.Size.Ratio, list(prop
 houseRatioByZip <- merge(houseRatioByZip, table(factor(propListingsSold$Zip.Code)), by.x = "Group.1", by.y = "Var1")
 houseRatioByCity <- aggregate(propListingsSold$house.To.Lot.Size.Ratio, list(propListingsSold$Postal.City), FUN = quantile, probs = 0.9)
 houseRatioByCity <- merge(houseRatioByCity, table(factor(propListingsSold$Postal.City)), by.x = "Group.1", by.y = "Var1")
+houseRatioByCounty <- aggregate(propListingsSold$house.To.Lot.Size.Ratio, list(propListingsSold$County), FUN = quantile, probs = 0.9)
+houseRatioByCounty <- merge(houseRatioByCounty, table(factor(propListingsSold$County)), by.x = "Group.1", by.y = "Var1")
 #houseRatioByCounty <- aggregate(propListingsSold$house.To.Lot.Size.Ratio, list(propListingsSold$Area..), FUN = quantile, probs = 0.9)
 
 
@@ -132,7 +145,7 @@ oneYear <- Sys.Date() - years(1)
 
 propListSoldNew <- propListingsSold[propListingsSold$Age <= 9, ]
 
-propSoldOneYear <- propListSoldNew[propListSoldNew[,17] >= oneYear, ]
+propSoldOneYear <- propListSoldNew[propListSoldNew[,18] >= oneYear, ]
 #propSoldSixMonths <- propListSoldBigNew[propListSoldBigNew[,17] >= sixMonths, ]
 #propSoldOneMonth <- propListSoldBigNew[propListSoldBigNew[,17] >= oneMonth, ]
 
@@ -152,12 +165,14 @@ propSoldOneYear <- propListSoldNew[propListSoldNew[,17] >= oneYear, ]
 # meanLastYearCity <- aggregate(propSoldOneYear[,29], list(propSoldOneYear$Postal.City), FUN = mean)
 # meanLastYearCity <- merge(meanLastYearCity, table(factor(propSoldOneYear$Postal.City)), by.x = "Group.1", by.y = "Var1")
 
-medianLastYearArea <- aggregate(propSoldOneYear[,29], list(propSoldOneYear$Area..), FUN = median)
+medianLastYearArea <- aggregate(propSoldOneYear[,30], list(propSoldOneYear$Area..), FUN = median)
 medianLastYearArea <- merge(medianLastYearArea, table(factor(propSoldOneYear$Area..)), by.x = "Group.1", by.y = "Var1")
-medianLastYearZip <- aggregate(propSoldOneYear[,29], list(propSoldOneYear$Zip.Code), FUN = median)
+medianLastYearZip <- aggregate(propSoldOneYear[,30], list(propSoldOneYear$Zip.Code), FUN = median)
 medianLastYearZip <- merge(medianLastYearZip, table(factor(propSoldOneYear$Zip.Code)), by.x = "Group.1", by.y = "Var1")
-medianLastYearCity <- aggregate(propSoldOneYear[,29], list(propSoldOneYear$Postal.City), FUN = median)
+medianLastYearCity <- aggregate(propSoldOneYear[,30], list(propSoldOneYear$Postal.City), FUN = median)
 medianLastYearCity <- merge(medianLastYearCity, table(factor(propSoldOneYear$Postal.City)), by.x = "Group.1", by.y = "Var1")
+medianLastYearCounty <- aggregate(propSoldOneYear[,30], list(propSoldOneYear$County), FUN = median)
+medianLastYearCounty <- merge(medianLastYearCounty, table(factor(propSoldOneYear$County)), by.x = "Group.1", by.y = "Var1")
 #meanOverTime[2] <- mean(propSoldSixMonths[,29])
 #meanOverTime[3] <- mean(propSoldOneMonth[,29])
 
@@ -181,7 +196,7 @@ propListingsActive <- propListings[propListings$Status == "Active", ]
 
 # This determines the proper house size ratio to use (making sure the numbers of samples are high enough)
 
-propListingsActive[,31] <- ifelse(houseRatioByArea[match(propListingsActive$Area.., houseRatioByArea$Group.1),3]>minSampleSize & 
+propListingsActive[,32] <- ifelse(houseRatioByArea[match(propListingsActive$Area.., houseRatioByArea$Group.1),3]>minSampleSize & 
                                     !is.na(houseRatioByArea[match(propListingsActive$Area.., houseRatioByArea$Group.1),3]>minSampleSize),
                                   houseRatioByArea[match(propListingsActive$Area.., houseRatioByArea$Group.1),2],
                                   ifelse(houseRatioByZip[match(propListingsActive$Zip.Code, houseRatioByZip$Group.1),3]>minSampleSize & 
@@ -189,13 +204,16 @@ propListingsActive[,31] <- ifelse(houseRatioByArea[match(propListingsActive$Area
                                          houseRatioByZip[match(propListingsActive$Zip.Code, houseRatioByZip$Group.1),2],
                                          ifelse(houseRatioByCity[match(propListingsActive$Postal.City, houseRatioByCity$Group.1),3]>minSampleSize & 
                                                   !is.na(houseRatioByCity[match(propListingsActive$Postal.City, houseRatioByCity$Group.1),3]>minSampleSize),
-                                                houseRatioByCity[match(propListingsActive$Postal.City, houseRatioByCity$Group.1),2], 1000)))
+                                                houseRatioByCity[match(propListingsActive$Postal.City, houseRatioByCity$Group.1),2], 
+                                                ifelse(houseRatioByCounty[match(propListingsActive$County, houseRatioByCounty$Group.1),3]>minSampleSize & 
+                                                         !is.na(houseRatioByCounty[match(propListingsActive$County, houseRatioByCounty$Group.1),3]>minSampleSize),
+                                                       houseRatioByCounty[match(propListingsActive$County, houseRatioByCounty$Group.1),2], 1000000))))
 
-names(propListingsActive)[31] <- "houseRatioNewBuild"
+names(propListingsActive)[32] <- "houseRatioNewBuild"
 
 # This determines the proper $/sf to use (making sure the numbers of samples are high enough)
 
-propListingsActive[,32] <- ifelse(medianLastYearArea[match(propListingsActive$Area.., medianLastYearArea$Group.1),3]>minSampleSize & 
+propListingsActive[,33] <- ifelse(medianLastYearArea[match(propListingsActive$Area.., medianLastYearArea$Group.1),3]>minSampleSize & 
                                     !is.na(medianLastYearArea[match(propListingsActive$Area.., medianLastYearArea$Group.1),3]>minSampleSize),
                                   medianLastYearArea[match(propListingsActive$Area.., medianLastYearArea$Group.1),2],
                                   ifelse(medianLastYearZip[match(propListingsActive$Zip.Code, medianLastYearZip$Group.1),3]>minSampleSize & 
@@ -203,30 +221,33 @@ propListingsActive[,32] <- ifelse(medianLastYearArea[match(propListingsActive$Ar
                                          medianLastYearZip[match(propListingsActive$Zip.Code, medianLastYearZip$Group.1),2],
                                          ifelse(medianLastYearCity[match(propListingsActive$Postal.City, medianLastYearCity$Group.1),3]>minSampleSize & 
                                                   !is.na(medianLastYearCity[match(propListingsActive$Postal.City, medianLastYearCity$Group.1),3]>minSampleSize),
-                                                medianLastYearCity[match(propListingsActive$Postal.City, medianLastYearCity$Group.1),2], 1000000)))
+                                                medianLastYearCity[match(propListingsActive$Postal.City, medianLastYearCity$Group.1),2], 
+                                                ifelse(medianLastYearCounty[match(propListingsActive$County, medianLastYearCounty$Group.1),3]>minSampleSize & 
+                                                         !is.na(medianLastYearCounty[match(propListingsActive$County, medianLastYearCounty$Group.1),3]>minSampleSize),
+                                                       medianLastYearCounty[match(propListingsActive$County, medianLastYearCounty$Group.1),2], 1000000000))))
 # propListingsActive[,32] <- if(meanLastYearArea[match(propListingsActive$Area.., meanLastYearArea$Group.1),3]>minSampleSize) {
 #                                   meanLastYearArea[match(propListingsActive$Area.., meanLastYearArea$Group.1),2]} else {
 #                                   if(meanLastYearZip[match(propListingsActive$Zip.Code, meanLastYearZip$Group.1),3]>minSampleSize) {
 #                                          meanLastYearZip[match(propListingsActive$Zip.Code, meanLastYearZip$Group.1),2]} else {
 #                                          if(meanLastYearCity[match(propListingsActive$Postal.City, meanLastYearCity$Group.1),3]>minSampleSize) {
 #                                                 meanLastYearCity[match(propListingsActive$Postal.City, meanLastYearCity$Group.1),2]} else 1000}}
-names(propListingsActive)[32] <- "houseDollarPerSFNewBuild"
+names(propListingsActive)[33] <- "houseDollarPerSFNewBuild"
 
 # This is the size of house that can be built
 
 # propListingsActive[,33] <- pmin(propListingsActive$lotSqFt * houseRatio, houseSizeCap[match(propListingsActive$Area.., houseSizeCap$Group.1),2])
-propListingsActive[,33] <- pmin(propListingsActive$lotSqFt * propListingsActive$houseRatioNewBuild, houseSizeCap[match(propListingsActive$Area.., houseSizeCap$Group.1),2])
-names(propListingsActive)[33] <- "houseSizeSqFt"
+propListingsActive[,34] <- pmin(propListingsActive$lotSqFt * propListingsActive$houseRatioNewBuild, houseSizeCap[match(propListingsActive$Area.., houseSizeCap$Group.1),2])
+names(propListingsActive)[34] <- "houseSizeSqFt"
 
 # Add a column for figuring out cost to build a new house
 
-propListingsActive[,34] <- propListingsActive$houseSizeSqFt * newConsCostSqFt
-names(propListingsActive)[34] <- "costToBuildHouse"
+propListingsActive[,35] <- propListingsActive$houseSizeSqFt * newConsCostSqFt
+names(propListingsActive)[35] <- "costToBuildHouse"
 
 # Figure out cost to buy the place and build a new house
 
-propListingsActive[,35] <- propListingsActive[,30] + propListingsActive[,34]
-names(propListingsActive)[35] <- "totalCostToBuild"
+propListingsActive[,36] <- propListingsActive[,31] + propListingsActive[,35]
+names(propListingsActive)[36] <- "totalCostToBuild"
 
 # Predicted sale price of newly built house.
 # Figure out the predicted $/sqft by using a combination of the 1 month, 6 month, and 1 year values.
@@ -249,13 +270,13 @@ names(propListingsActive)[35] <- "totalCostToBuild"
 
 predPriceFinal <- propListingsActive$houseDollarPerSFNewBuild * 0.93
 
-propListingsActive[,36] <- pmin(propListingsActive[,33] * predPriceFinal, housePriceCap[match(propListingsActive$Area.., houseSizeCap$Group.1),2])
-names(propListingsActive)[36] <- "predictedSalePrice"
+propListingsActive[,37] <- pmin(propListingsActive[,34] * predPriceFinal, housePriceCap[match(propListingsActive$Area.., houseSizeCap$Group.1),2])
+names(propListingsActive)[37] <- "predictedSalePrice"
 
 # Figure out potential profit by comparing the difference between the predicted price and cost to build
 
-propListingsActive[,37] <- propListingsActive[,36] - propListingsActive[,35]
-names(propListingsActive)[37] <- "potentialProfit"
+propListingsActive[,38] <- propListingsActive[,37] - propListingsActive[,36]
+names(propListingsActive)[38] <- "potentialProfit"
 
 # Sort the listings to see which are the most profitable
 
@@ -263,10 +284,23 @@ names(propListingsActive)[37] <- "potentialProfit"
 
 # Sort by the profit percentage instead
 
-propListingsActive[,38] <- propListingsActive$potentialProfit / propListingsActive$totalCostToBuild
-names(propListingsActive)[38] <- "profitPercentOfInvestment"
+propListingsActive[,39] <- propListingsActive$potentialProfit / propListingsActive$totalCostToBuild
+names(propListingsActive)[39] <- "profitPercentOfInvestment"
 
-propListingsActive[,39] <- propListingsActive$MLS.Number
-names(propListingsActive) [39] <- "MLSNumberEOD"
+#propListingsActive[,40] <- propListingsActive$MLS.Number
+#names(propListingsActive) [40] <- "MLSNumberEOD"
 
-propListingsActive <- propListingsActive[order(-propListingsActive[,38]), ]
+propListingsActive <- propListingsActive[order(-propListingsActive[,39]), ]
+
+propProspectsReport <- subset(propListingsActive, profitPercentOfInvestment >= lowestProfit, 
+                              select = c("profitPercentOfInvestment", "MLS.Number", 
+                                                             "houseRatioNewBuild", "houseSizeSqFt", "list.Price.Num",
+                                                             "houseDollarPerSFNewBuild", "totalCostToBuild",
+                                                             "predictedSalePrice", "potentialProfit", "lotSqFt",
+                                                             "Age", "DOM", "Street.Address", "Area..", "Zip.Code",
+                                                             "Postal.City", "County"))
+
+# Use this print command to get rid of the annoying scientific notation in the printed table
+#format(propProspectsReport, scientific=FALSE)
+
+write.csv(format(propProspectsReport, scientific=FALSE), "currentProspectsReport.csv", row.names = FALSE)

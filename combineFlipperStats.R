@@ -1,6 +1,15 @@
+# This short little program takes all the files in the "/allData" folder and combines them into
+# one file, "flipperAll.csv". This file is a full database with all the listings contained in it.
+
+
+
 library(data.table)
 
-setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper/allData")
+# work computer address
+#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper/allData")
+# home computer address
+setwd("D:/programming/work/realEstateFlipper/realEstateFlipper/allData")
+
 
 flip <- list()
 
