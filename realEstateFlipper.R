@@ -1,9 +1,9 @@
 library(lubridate)
 
 # work computer address
-#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 # home computer address
-setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
+#setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 
 # Constants for the program
@@ -22,7 +22,9 @@ minSampleSize <- 9
 
 # Start of sold property data analysis
 
-propListings <- read.csv("flipperStats.csv", stringsAsFactors = FALSE)
+#propListings <- read.csv("flipperStats.csv", stringsAsFactors = FALSE)
+
+propListings <- read.csv("flipperAll.csv", stringsAsFactors = FALSE)
 
 propListings[ , 25] <- as.numeric(gsub(",", "", as.character(propListings[ , 19])))
 names(propListings)[25] <- "houseSqFt"
@@ -89,7 +91,7 @@ houseRatioByCity <- merge(houseRatioByCity, table(factor(propListingsSold$Postal
 
 # Figure out the biggest possible house in the area--this will put a cap on the biggest build size.
 
-houseSizeCap <- aggregate(propListingsSold$houseSqFt, list(propListingsSold$Area..), FUN = max)
+houseSizeCap <- aggregate(propListingsSold$houseSqFt, list(propListingsSold$Area..), FUN = quantile, probs = 0.85)
 
 # Also, figure out the highest sale price in the area to cap the sale price, as well -- the 0.93 is for fees
 
@@ -143,12 +145,19 @@ propSoldOneYear <- propListSoldNew[propListSoldNew[,17] >= oneYear, ]
 # }
 
 #meanOverTime <- numeric()
-meanLastYearArea <- aggregate(propSoldOneYear[,29], list(propSoldOneYear$Area..), FUN = mean)
-meanLastYearArea <- merge(meanLastYearArea, table(factor(propSoldOneYear$Area..)), by.x = "Group.1", by.y = "Var1")
-meanLastYearZip <- aggregate(propSoldOneYear[,29], list(propSoldOneYear$Zip.Code), FUN = mean)
-meanLastYearZip <- merge(meanLastYearZip, table(factor(propSoldOneYear$Zip.Code)), by.x = "Group.1", by.y = "Var1")
-meanLastYearCity <- aggregate(propSoldOneYear[,29], list(propSoldOneYear$Postal.City), FUN = mean)
-meanLastYearCity <- merge(meanLastYearCity, table(factor(propSoldOneYear$Postal.City)), by.x = "Group.1", by.y = "Var1")
+# meanLastYearArea <- aggregate(propSoldOneYear[,29], list(propSoldOneYear$Area..), FUN = mean)
+# meanLastYearArea <- merge(meanLastYearArea, table(factor(propSoldOneYear$Area..)), by.x = "Group.1", by.y = "Var1")
+# meanLastYearZip <- aggregate(propSoldOneYear[,29], list(propSoldOneYear$Zip.Code), FUN = mean)
+# meanLastYearZip <- merge(meanLastYearZip, table(factor(propSoldOneYear$Zip.Code)), by.x = "Group.1", by.y = "Var1")
+# meanLastYearCity <- aggregate(propSoldOneYear[,29], list(propSoldOneYear$Postal.City), FUN = mean)
+# meanLastYearCity <- merge(meanLastYearCity, table(factor(propSoldOneYear$Postal.City)), by.x = "Group.1", by.y = "Var1")
+
+medianLastYearArea <- aggregate(propSoldOneYear[,29], list(propSoldOneYear$Area..), FUN = median)
+medianLastYearArea <- merge(medianLastYearArea, table(factor(propSoldOneYear$Area..)), by.x = "Group.1", by.y = "Var1")
+medianLastYearZip <- aggregate(propSoldOneYear[,29], list(propSoldOneYear$Zip.Code), FUN = median)
+medianLastYearZip <- merge(medianLastYearZip, table(factor(propSoldOneYear$Zip.Code)), by.x = "Group.1", by.y = "Var1")
+medianLastYearCity <- aggregate(propSoldOneYear[,29], list(propSoldOneYear$Postal.City), FUN = median)
+medianLastYearCity <- merge(medianLastYearCity, table(factor(propSoldOneYear$Postal.City)), by.x = "Group.1", by.y = "Var1")
 #meanOverTime[2] <- mean(propSoldSixMonths[,29])
 #meanOverTime[3] <- mean(propSoldOneMonth[,29])
 
@@ -186,15 +195,15 @@ names(propListingsActive)[31] <- "houseRatioNewBuild"
 
 # This determines the proper $/sf to use (making sure the numbers of samples are high enough)
 
-propListingsActive[,32] <- ifelse(meanLastYearArea[match(propListingsActive$Area.., meanLastYearArea$Group.1),3]>minSampleSize & 
-                                    !is.na(meanLastYearArea[match(propListingsActive$Area.., meanLastYearArea$Group.1),3]>minSampleSize),
-                                  meanLastYearArea[match(propListingsActive$Area.., meanLastYearArea$Group.1),2],
-                                  ifelse(meanLastYearZip[match(propListingsActive$Zip.Code, meanLastYearZip$Group.1),3]>minSampleSize & 
-                                           !is.na(meanLastYearZip[match(propListingsActive$Zip.Code, meanLastYearZip$Group.1),3]>minSampleSize),
-                                         meanLastYearZip[match(propListingsActive$Zip.Code, meanLastYearZip$Group.1),2],
-                                         ifelse(meanLastYearCity[match(propListingsActive$Postal.City, meanLastYearCity$Group.1),3]>minSampleSize & 
-                                                  !is.na(meanLastYearCity[match(propListingsActive$Postal.City, meanLastYearCity$Group.1),3]>minSampleSize),
-                                                meanLastYearCity[match(propListingsActive$Postal.City, meanLastYearCity$Group.1),2], 1000000)))
+propListingsActive[,32] <- ifelse(medianLastYearArea[match(propListingsActive$Area.., medianLastYearArea$Group.1),3]>minSampleSize & 
+                                    !is.na(medianLastYearArea[match(propListingsActive$Area.., medianLastYearArea$Group.1),3]>minSampleSize),
+                                  medianLastYearArea[match(propListingsActive$Area.., medianLastYearArea$Group.1),2],
+                                  ifelse(medianLastYearZip[match(propListingsActive$Zip.Code, medianLastYearZip$Group.1),3]>minSampleSize & 
+                                           !is.na(medianLastYearZip[match(propListingsActive$Zip.Code, medianLastYearZip$Group.1),3]>minSampleSize),
+                                         medianLastYearZip[match(propListingsActive$Zip.Code, medianLastYearZip$Group.1),2],
+                                         ifelse(medianLastYearCity[match(propListingsActive$Postal.City, medianLastYearCity$Group.1),3]>minSampleSize & 
+                                                  !is.na(medianLastYearCity[match(propListingsActive$Postal.City, medianLastYearCity$Group.1),3]>minSampleSize),
+                                                medianLastYearCity[match(propListingsActive$Postal.City, medianLastYearCity$Group.1),2], 1000000)))
 # propListingsActive[,32] <- if(meanLastYearArea[match(propListingsActive$Area.., meanLastYearArea$Group.1),3]>minSampleSize) {
 #                                   meanLastYearArea[match(propListingsActive$Area.., meanLastYearArea$Group.1),2]} else {
 #                                   if(meanLastYearZip[match(propListingsActive$Zip.Code, meanLastYearZip$Group.1),3]>minSampleSize) {
@@ -256,5 +265,8 @@ names(propListingsActive)[37] <- "potentialProfit"
 
 propListingsActive[,38] <- propListingsActive$potentialProfit / propListingsActive$totalCostToBuild
 names(propListingsActive)[38] <- "profitPercentOfInvestment"
+
+propListingsActive[,39] <- propListingsActive$MLS.Number
+names(propListingsActive) [39] <- "MLSNumberEOD"
 
 propListingsActive <- propListingsActive[order(-propListingsActive[,38]), ]
