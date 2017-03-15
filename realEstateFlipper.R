@@ -7,9 +7,9 @@
 library(lubridate)
 
 # work computer address
-setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 # home computer address
-#setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
+setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 
 # Constants for the program
@@ -107,7 +107,7 @@ houseRatioByCounty <- merge(houseRatioByCounty, table(factor(propListingsSold$Co
 
 # Figure out the biggest possible house in the area--this will put a cap on the biggest build size.
 
-houseSizeCap <- aggregate(propListingsSold$houseSqFt, list(propListingsSold$Area..), FUN = quantile, probs = 0.85)
+houseSizeCap <- aggregate(propListingsSold$houseSqFt, list(propListingsSold$Area..), FUN = quantile, probs = 0.9)
 
 # Also, figure out the highest sale price in the area to cap the sale price, as well -- the 0.93 is for fees
 
