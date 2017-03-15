@@ -8,9 +8,9 @@ library(lubridate)
 library(mailR)
 
 # work computer address
-#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 # home computer address
-setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
+#setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 
 
@@ -37,26 +37,32 @@ lowestProfit <- 0.1
 # This section opens the past file and combines it with the new information
 
 # Open the archive data file
-propListings <- read.csv("flipperAll.csv")
+propListings <- read.csv("flipperAll.csv", stringsAsFactors = FALSE)
 
 # Open the new file with the last week's data
-propListingsUpdate <- read.csv("flipperStats.csv")
+propListingsUpdate <- read.csv("flipperStats.csv", stringsAsFactors = FALSE)
 
 # Figure out the MLS numbers in the new data that already exist in the data, and note the numbers that don't appear
 updatedListings <- na.omit(match(propListingsUpdate$MLS.Number, propListings$MLS.Number))
 naRows <- attr(updatedListings, "na.action")
 
 # Remove the rows that don't exist in both from the new data
-propChanges <- propListingsUpdate[-naRows,]
+if(length(naRows) > 0) {
+  propChanges <- propListingsUpdate[-naRows,]
+  
+  # Overwrite all the old values with the new values
+  propListings[updatedListings, ] <- propChanges
+  
+  # Make a data frame with only the new MLS numbers, and then attach it to the full data file
+  propNew <- propListingsUpdate[naRows, ]
+  propCombined <- rbind(propListings, propNew)
+  
+  propListings <- propCombined
+} else {
+  propListings[updatedListings, ] <- propListingsUpdate
+  propCombined <- propListings
+}
 
-# Overwrite all the old values with the new values
-propListings[updatedListings, ] <- propChanges
-
-# Make a data frame with only the new MLS numbers, and then attach it to the full data file
-propNew <- propListingsUpdate[naRows, ]
-propCombined <- rbind(propListings, propNew)
-
-propListings <- propCombined
 
 write.csv(propCombined, "flipperAll.csv", row.names = FALSE)
 
@@ -283,6 +289,11 @@ names(propListingsActive)[38] <- "potentialProfit"
 
 propListingsActive[,39] <- propListingsActive$potentialProfit / propListingsActive$totalCostToBuild
 names(propListingsActive)[39] <- "profitPercentOfInvestment"
+
+propListingsActive[,40] <- (propListingsActive$predictedSalePrice - 
+                              propListingsActive$list.Price.Num) / 
+  propListingsActive$houseSizeSqFt
+names(propListingsActive)[40] <- "breakEvenBuildCost"
 
 propListingsActive <- propListingsActive[order(-propListingsActive[,39]), ]
 
