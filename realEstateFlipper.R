@@ -7,9 +7,9 @@
 library(lubridate)
 
 # work computer address
-#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 # home computer address
-setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
+#setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 
 # Constants for the program
@@ -19,6 +19,9 @@ setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 # The cost/sqft to build a new place
 newConsCostSqFt <- 250
+
+# Lowest possible build price
+lowestBuildCost <- 250
 
 # Necessary number of samples to be statistically significant
 minSampleSize <- 9
@@ -287,20 +290,34 @@ names(propListingsActive)[38] <- "potentialProfit"
 propListingsActive[,39] <- propListingsActive$potentialProfit / propListingsActive$totalCostToBuild
 names(propListingsActive)[39] <- "profitPercentOfInvestment"
 
+propListingsActive[,40] <- (propListingsActive$predictedSalePrice - 
+                              propListingsActive$list.Price.Num) / 
+  propListingsActive$houseSizeSqFt
+names(propListingsActive)[40] <- "breakEvenBuildCost"
+
 #propListingsActive[,40] <- propListingsActive$MLS.Number
 #names(propListingsActive) [40] <- "MLSNumberEOD"
 
 propListingsActive <- propListingsActive[order(-propListingsActive[,39]), ]
 
-propProspectsReport <- subset(propListingsActive, profitPercentOfInvestment >= lowestProfit, 
-                              select = c("profitPercentOfInvestment", "MLS.Number", 
+propProspectsReport <- subset(propListingsActive, profitPercentOfInvestment >= lowestProfit,
+                              select = c("profitPercentOfInvestment", "MLS.Number",
                                                              "houseRatioNewBuild", "houseSizeSqFt", "list.Price.Num",
                                                              "houseDollarPerSFNewBuild", "totalCostToBuild",
                                                              "predictedSalePrice", "potentialProfit", "lotSqFt",
                                                              "Age", "DOM", "Street.Address", "Area..", "Zip.Code",
                                                              "Postal.City", "County"))
 
+propProspectsReportShort <- subset(propListingsActive, breakEvenBuildCost >= lowestBuildCost,
+                             select = c("Street.Address", "Postal.City", "lotSqFt", "list.Price.Num",
+                                        "houseSizeSqFt", "breakEvenBuildCost", "profitPercentOfInvestment"))
+names(propProspectsReportShort)[5] <- "projectedHouseSizeSqFt"
+
+propProspectsReportShort <- propProspectsReportShort[order(-propProspectsReportShort$breakEvenBuildCost), ]
+
+
 # Use this print command to get rid of the annoying scientific notation in the printed table
 #format(propProspectsReport, scientific=FALSE)
 
 write.csv(format(propProspectsReport, scientific=FALSE), "currentProspectsReport.csv", row.names = FALSE)
+write.csv(format(propProspectsReportShort, scientific=FALSE), "currentProspectsReportShort.csv", row.names = FALSE)

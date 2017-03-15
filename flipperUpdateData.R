@@ -5,6 +5,7 @@
 # called "newListingsReport.csv".
 
 library(lubridate)
+library(mailR)
 
 # work computer address
 #setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
@@ -20,6 +21,9 @@ setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 # The cost/sqft to build a new place
 newConsCostSqFt <- 250
+
+# Lowest possible build price
+lowestBuildCost <- 250
 
 # Necessary number of samples to be statistically significant
 minSampleSize <- 9
@@ -290,7 +294,50 @@ propProspectsReport <- subset(propListingsActive, profitPercentOfInvestment >= l
                                          "Age", "DOM", "Street.Address", "Area..", "Zip.Code",
                                          "Postal.City", "County"))
 
+propProspectsReportShort <- subset(propListingsActive, breakEvenBuildCost >= lowestBuildCost,
+                                   select = c("Street.Address", "Postal.City", "lotSqFt", "list.Price.Num",
+                                              "houseSizeSqFt", "breakEvenBuildCost", "profitPercentOfInvestment"))
+names(propProspectsReportShort)[5] <- "projectedHouseSizeSqFt"
+
+propProspectsReportShort <- propProspectsReportShort[order(-propProspectsReportShort$breakEvenBuildCost), ]
+
+
 # Use this print command to get rid of the annoying scientific notation in the printed table
 #format(propProspectsReport, scientific=FALSE)
 
 write.csv(format(propProspectsReport, scientific=FALSE), "newListingsReport.csv", row.names = FALSE)
+write.csv(format(propProspectsReportShort, scientific=FALSE), "newListingsReportShort.csv", row.names = FALSE)
+
+
+
+
+
+# This code at the end is to send an email to interested parties with the new
+# listings in it.
+
+sender <- "andy@tfo.vc"
+recipients <- c("andy@tiberiusfo.com", "vchiang@gmail.com")
+
+subject <- "This Week's Results"
+body <- "Attached are the results for the week"
+
+hostName <- "smtp.gmail.com"
+port <- 465
+userName <- "andy@tiberiusfo.com"
+passWord <- "uwmsjyfyxeinavll"
+
+if (nrow(propProspectsReport) > 0) {
+  send.mail(from = sender, to = "andy@tiberiusfo.com", subject = subject, body = body,
+            smtp = list(host.name = hostName, port = port,
+                        user.name = userName, passwd = passWord, ssl = TRUE),
+            authenticate = TRUE, send = TRUE,
+            attach.files = "newListingsReport.csv")
+}
+
+if (nrow(propProspectsReport) > 0) {
+  send.mail(from = sender, to = recipients, subject = subject, body = body,
+            smtp = list(host.name = hostName, port = port,
+                        user.name = userName, passwd = passWord, ssl = TRUE),
+            authenticate = TRUE, send = TRUE,
+            attach.files = "newListingsReportShort.csv")
+}
