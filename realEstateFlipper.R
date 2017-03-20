@@ -113,7 +113,8 @@ houseSizeCap <- aggregate(propListingsSold$houseSqFt, list(propListingsSold$Area
 
 housePriceCap <- aggregate(propListingsSold$sell.Price.Num, list(propListingsSold$Area..), FUN = max)
 
-housePriceCap[,2] <- housePriceCap[,2] * 0.93
+#housePriceCap[,2] <- housePriceCap[,2] * 0.93
+housePriceCap[,2] <- housePriceCap[,2] * 1
 
 # This is the calculation to figure out the proper ratio of house to lot size to build.
 
@@ -271,7 +272,8 @@ names(propListingsActive)[36] <- "totalCostToBuild"
 
 #predPriceFinal <- predPrice * 0.93
 
-predPriceFinal <- propListingsActive$houseDollarPerSFNewBuild * 0.93
+#predPriceFinal <- propListingsActive$houseDollarPerSFNewBuild * 0.93
+predPriceFinal <- propListingsActive$houseDollarPerSFNewBuild * 1
 
 propListingsActive[,37] <- pmin(propListingsActive[,34] * predPriceFinal, housePriceCap[match(propListingsActive$Area.., houseSizeCap$Group.1),2])
 names(propListingsActive)[37] <- "predictedSalePrice"
