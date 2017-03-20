@@ -8,9 +8,9 @@ library(ggplot2)
 library(plotly)
 
 # work computer address
-#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 # home computer address
-setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
+#setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 
 # Constants for the program
@@ -318,7 +318,7 @@ errorPlotSize <- ggplot(flipReportComplete, aes(x = Parcel.Number, y = futureAct
   guides(color = FALSE, size = FALSE) +
   geom_point(aes(y = predictHouseSizeSqFt), shape = 1) +
   theme_bw()
-errorPlotInterSize <- ggplotly(errorPlotRatio)
+errorPlotInterSize <- ggplotly(errorPlotSize)
 
 # This is for the dollar per SF:
 errorPlotDPS <- ggplot(flipReportComplete, aes(x = Parcel.Number, y = futureActualDollarPerSF)) +
