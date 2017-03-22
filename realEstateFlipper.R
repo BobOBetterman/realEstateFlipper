@@ -7,9 +7,9 @@
 library(lubridate)
 
 # work computer address
-setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 # home computer address
-#setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
+setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 
 # Constants for the program
@@ -18,10 +18,10 @@ setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 #houseRatio <- numeric()
 
 # The cost/sqft to build a new place
-newConsCostSqFt <- 250
+newConsCostSqFt <- 300
 
 # Lowest possible build price
-lowestBuildCost <- 250
+lowestBuildCost <- 300
 
 # Necessary number of samples to be statistically significant
 minSampleSize <- 9

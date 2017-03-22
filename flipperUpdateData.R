@@ -20,10 +20,10 @@ setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 #houseRatio <- numeric()
 
 # The cost/sqft to build a new place
-newConsCostSqFt <- 250
+newConsCostSqFt <- 300
 
 # Lowest possible build price
-lowestBuildCost <- 250
+lowestBuildCost <- 300
 
 # Necessary number of samples to be statistically significant
 minSampleSize <- 9

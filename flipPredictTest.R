@@ -16,10 +16,10 @@ setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 # Constants for the program
 
 # The cost/sqft to build a new place
-newConsCostSqFt <- 250
+newConsCostSqFt <- 300
 
 # Lowest possible build price
-lowestBuildCost <- 250
+lowestBuildCost <- 300
 
 # Necessary number of samples to be statistically significant
 minSampleSize <- 9
