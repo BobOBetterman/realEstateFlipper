@@ -7,9 +7,9 @@
 library(lubridate)
 
 # work computer address
-#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 # home computer address
-setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
+#setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 
 # Constants for the program
@@ -321,5 +321,5 @@ propProspectsReportShort <- propProspectsReportShort[order(-propProspectsReportS
 # Use this print command to get rid of the annoying scientific notation in the printed table
 #format(propProspectsReport, scientific=FALSE)
 
-write.csv(format(propProspectsReport, scientific=FALSE), "currentProspectsReport.csv", row.names = FALSE)
-write.csv(format(propProspectsReportShort, scientific=FALSE), "currentProspectsReportShort.csv", row.names = FALSE)
+#write.csv(format(propProspectsReport, scientific=FALSE), "currentProspectsReport.csv", row.names = FALSE)
+#write.csv(format(propProspectsReportShort, scientific=FALSE), "currentProspectsReportShort.csv", row.names = FALSE)

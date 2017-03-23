@@ -8,9 +8,9 @@ library(lubridate)
 library(mailR)
 
 # work computer address
-#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 # home computer address
-setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
+#setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 source("realEstateFlipperFunction.R")
 
@@ -28,19 +28,22 @@ if(file.exists("flipperStats.csv")) {
 
 #####################################################################################################################
 #####################################################################################################################
-# Sunny
+# Andrew Hill
 #####################################################################################################################
 # Client name
-clientName <- "Sunny"
+clientName <- "Victor Chiang"
 
 # The cost/sqft to build a new place
 buildCost <- 300
 
+# Smallest discount to look at
+lowestDiscount <- -200
+
 # The cities to search in
-cities <- c("Palo Alto", "Los Altos")
+cities <- ""
 
 # Email information
-recipients <- c("andy@tiberiusfo.com")
+recipients <- c("andy@tiberiusfo.com", "vchiang@gmail.com")
 #####################################################
 #####################################################
 #####################################################
@@ -49,6 +52,37 @@ recipients <- c("andy@tiberiusfo.com")
 # Lowest possible build price
 lowestBreakEvenBuild <- buildCost
 
-clientFlipperReport(clientName, buildCost, lowestBreakEvenBuild, cities, recipients)
+clientFlipperReport(clientName, buildCost, lowestBreakEvenBuild, lowestDiscount, cities, recipients)
 #####################################################################################################################
+#####################################################################################################################
+
+
+#####################################################################################################################
+# #####################################################################################################################
+# # Sunny
+# #####################################################################################################################
+# # Client name
+# clientName <- "Sunny"
+# 
+# # The cost/sqft to build a new place
+# buildCost <- 300
+# 
+# # Smallest discount to look at
+# lowestDiscount <- -200
+# 
+# # The cities to search in
+# cities <- c("Palo Alto", "Los Altos")
+# 
+# # Email information
+# recipients <- c("andy@tiberiusfo.com", "vchiang@gmail.com")
+# #####################################################
+# #####################################################
+# #####################################################
+# 
+# 
+# # Lowest possible build price
+# lowestBreakEvenBuild <- buildCost
+# 
+# clientFlipperReport(clientName, buildCost, lowestBreakEvenBuild, lowestDiscount, cities, recipients)
+# #####################################################################################################################
 #####################################################################################################################
