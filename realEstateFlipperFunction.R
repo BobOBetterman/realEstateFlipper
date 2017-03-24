@@ -40,25 +40,25 @@ updateListings <- function() {
 
 
 # This is the function that runs all the flipping functions for a client.
-clientFlipperReport <- function(clientName, buildCost, lowestBreakEvenBuild, lowestDiscount, cities = "", recipients) {
-  subject <- paste("This Week's Results", "|", clientName, sep = " ")
-  
-  clientName <- gsub(" ", "", clientName, fixed = TRUE)
-  
-  # Function call to run the numbers
-  listingRepData <- tearDownFlip(buildCost, lowestBreakEvenBuild)
-  
-  longPropReport <- longProspectsReport(listingRepData, cities)
-  
-  shortTearDownPropReport <- shortTearDownProspectsReport(listingRepData, lowestBreakEvenBuild, cities)
-  shortDiscountPropReport <- shortDiscountProspectsReport(listingRepData, lowestDiscount, cities)
-  
-  writeReports(longPropReport, shortTearDownPropReport, shortDiscountPropReport, clientName)
-  
-  if (nrow(shortTearDownPropReport) > 0 | nrow(shortDiscountPropReport > 0)) {
-    emailReports(recipients, subject, clientName, shortTearDownPropReport, shortDiscountPropReport)
-  }
-}
+# clientFlipperReport <- function(clientName, buildCost, lowestBreakEvenBuild, lowestDiscount, cities = "", recipients) {
+#   subject <- paste("This Week's Results", "|", clientName, sep = " ")
+#   
+#   clientName <- gsub(" ", "", clientName, fixed = TRUE)
+#   
+#   # Function call to run the numbers
+#   listingRepData <- tearDownFlip(buildCost, lowestBreakEvenBuild)
+#   
+#   longPropReport <- longProspectsReport(listingRepData, cities)
+#   
+#   shortTearDownPropReport <- shortTearDownProspectsReport(listingRepData, lowestBreakEvenBuild, cities)
+#   shortDiscountPropReport <- shortDiscountProspectsReport(listingRepData, lowestDiscount, cities)
+#   
+#   writeReports(longPropReport, shortTearDownPropReport, shortDiscountPropReport, clientName)
+#   
+#   if (nrow(shortTearDownPropReport) > 0 | nrow(shortDiscountPropReport > 0)) {
+#     emailReports(recipients, subject, clientName, shortTearDownPropReport, shortDiscountPropReport)
+#   }
+# }
 
 
 # This function generates the list of profitable flipping properties
@@ -176,7 +176,7 @@ tearDownFlip <- function(newBuildCost, lowestNewBuildCost){
   # Select only houses on lots over 2500 sqft, and that are less
   # than three years old. Than check the sale prices on those houses.
   
-  propListSoldNew <- propListingsSold[propListingsSold$Age <= 9, ]
+  propListSoldNew <- propListingsSold[as.numeric(propListingsSold$Age) <= 9, ]
   
   propSoldOneYear <- propListSoldNew[propListSoldNew[,18] >= oneYear, ]
   
@@ -222,10 +222,10 @@ tearDownFlip <- function(newBuildCost, lowestNewBuildCost){
                                            houseRatioByZip[match(propListingsActive$Zip.Code, houseRatioByZip$Group.1),2],
                                            ifelse(houseRatioByCity[match(propListingsActive$Postal.City, houseRatioByCity$Group.1),3]>minSampleSize &
                                                     !is.na(houseRatioByCity[match(propListingsActive$Postal.City, houseRatioByCity$Group.1),3]>minSampleSize),
-                                                  houseRatioByCity[match(propListingsActive$Postal.City, houseRatioByCity$Group.1),2],
-                                                  ifelse(houseRatioByCounty[match(propListingsActive$County, houseRatioByCounty$Group.1),3]>minSampleSize &
-                                                           !is.na(houseRatioByCounty[match(propListingsActive$County, houseRatioByCounty$Group.1),3]>minSampleSize),
-                                                         houseRatioByCounty[match(propListingsActive$County, houseRatioByCounty$Group.1),2], 1000000))))
+                                                  houseRatioByCity[match(propListingsActive$Postal.City, 
+                                                                         houseRatioByCity$Group.1),2], 
+                                                  houseRatioByCounty[match(propListingsActive$County, 
+                                                                           houseRatioByCounty$Group.1),2])))
   
   names(propListingsActive)[32] <- "houseRatioNewBuild"
   
@@ -239,10 +239,10 @@ tearDownFlip <- function(newBuildCost, lowestNewBuildCost){
                                            medianLastYearZip[match(propListingsActive$Zip.Code, medianLastYearZip$Group.1),2],
                                            ifelse(medianLastYearCity[match(propListingsActive$Postal.City, medianLastYearCity$Group.1),3]>minSampleSize &
                                                     !is.na(medianLastYearCity[match(propListingsActive$Postal.City, medianLastYearCity$Group.1),3]>minSampleSize),
-                                                  medianLastYearCity[match(propListingsActive$Postal.City, medianLastYearCity$Group.1),2],
-                                                  ifelse(medianLastYearCounty[match(propListingsActive$County, medianLastYearCounty$Group.1),3]>minSampleSize &
-                                                           !is.na(medianLastYearCounty[match(propListingsActive$County, medianLastYearCounty$Group.1),3]>minSampleSize),
-                                                         medianLastYearCounty[match(propListingsActive$County, medianLastYearCounty$Group.1),2], 1000000000))))
+                                                  medianLastYearCity[match(propListingsActive$Postal.City, 
+                                                                           medianLastYearCity$Group.1),2], 
+                                                  medianLastYearCounty[match(propListingsActive$County, 
+                                                                             medianLastYearCounty$Group.1),2])))
   # propListingsActive[,32] <- if(meanLastYearArea[match(propListingsActive$Area.., meanLastYearArea$Group.1),3]>minSampleSize) {
   #                                   meanLastYearArea[match(propListingsActive$Area.., meanLastYearArea$Group.1),2]} else {
   #                                   if(meanLastYearZip[match(propListingsActive$Zip.Code, meanLastYearZip$Group.1),3]>minSampleSize) {
@@ -296,6 +296,28 @@ tearDownFlip <- function(newBuildCost, lowestNewBuildCost){
     propListingsActive$houseDollarPerSFNewBuild
   
   propListingsActive <- propListingsActive[order(-propListingsActive[,39]), ]
+  
+  # Add columns for each of the house ratio groups--put the counts in them, so we know which one the program is 
+  # using
+  propListingsActive[, "areaRatioCount"] <- houseRatioByArea[match(propListingsActive$Area.., 
+                                                                   houseRatioByArea$Group.1), "Freq"]
+  propListingsActive[, "zipRatioCount"] <- houseRatioByZip[match(propListingsActive$Zip.Code, 
+                                                                   houseRatioByZip$Group.1), "Freq"]
+  propListingsActive[, "cityRatioCount"] <- houseRatioByCity[match(propListingsActive$Postal.City, 
+                                                                   houseRatioByCity$Group.1), "Freq"]
+  propListingsActive[, "countyRatioCount"] <- houseRatioByCounty[match(propListingsActive$County, 
+                                                                   houseRatioByCounty$Group.1), "Freq"]
+  
+  # Add columns for each of the price groups--put the counts in them, so we know which one the program is 
+  # using
+  propListingsActive[, "areaPriceCount"] <- medianLastYearArea[match(propListingsActive$Area.., 
+                                                                   medianLastYearArea$Group.1), "Freq"]
+  propListingsActive[, "zipPriceCount"] <- medianLastYearZip[match(propListingsActive$Zip.Code, 
+                                                                 medianLastYearZip$Group.1), "Freq"]
+  propListingsActive[, "cityPriceCount"] <- medianLastYearCity[match(propListingsActive$Postal.City, 
+                                                                   medianLastYearCity$Group.1), "Freq"]
+  propListingsActive[, "countyPriceCount"] <- medianLastYearCounty[match(propListingsActive$County, 
+                                                                       medianLastYearCounty$Group.1), "Freq"]
   
   return(propListingsActive)
 }
@@ -589,7 +611,9 @@ longProspectsReport <- function(activeProp, cities) {
                                              "houseDollarPerSFNewBuild", "totalCostToBuild",
                                              "predictedSalePrice", "potentialProfit", "lotSqFt",
                                              "Age", "DOM", "Street.Address", "Area..", "Zip.Code",
-                                             "Postal.City", "County"))
+                                             "Postal.City", "County", "areaRatioCount", "zipRatioCount", 
+                                             "cityRatioCount", "countyRatioCount", "areaPriceCount", 
+                                             "zipPriceCount", "cityPriceCount", "countyPriceCount"))
   } else {
 
     propProspectsReport <- subset(activeProp, profitPercentOfInvestment >= lowestProfit & 
@@ -599,7 +623,9 @@ longProspectsReport <- function(activeProp, cities) {
                                              "houseDollarPerSFNewBuild", "totalCostToBuild",
                                              "predictedSalePrice", "potentialProfit", "lotSqFt",
                                              "Age", "DOM", "Street.Address", "Area..", "Zip.Code",
-                                             "Postal.City", "County"))
+                                             "Postal.City", "County", "areaRatioCount", "zipRatioCount", 
+                                             "cityRatioCount", "countyRatioCount", "areaPriceCount", 
+                                             "zipPriceCount", "cityPriceCount", "countyPriceCount"))
   }
   
   return(propProspectsReport)
@@ -614,14 +640,18 @@ shortTearDownProspectsReport <- function(activeProp, lowestNewBuildCost, cities)
                                        select = c("Street.Address", "Postal.City", "lotSqFt", "list.Price.Num",
                                                   "houseSizeSqFt", "predictedSalePrice", 
                                                   "breakEvenBuildCost", 
-                                                  "profitPercentOfInvestment"))
+                                                  "profitPercentOfInvestment", 
+                                                  "areaPriceCount", "zipPriceCount", "cityPriceCount", 
+                                                  "countyPriceCount"))
   } else {
     propProspectsReportShort <- subset(activeProp, breakEvenBuildCost >= lowestNewBuildCost & 
                                          activeProp$Postal.City %in% cities,
                                        select = c("Street.Address", "Postal.City", "lotSqFt", "list.Price.Num",
                                                   "houseSizeSqFt", "predictedSalePrice", 
                                                   "breakEvenBuildCost", 
-                                                  "profitPercentOfInvestment"))
+                                                  "profitPercentOfInvestment", 
+                                                  "areaPriceCount", "zipPriceCount", "cityPriceCount", 
+                                                  "countyPriceCount"))
   }
   names(propProspectsReportShort)[5] <- "projectedHouseSizeSqFt"
   
@@ -637,14 +667,16 @@ shortDiscountProspectsReport <- function(activeProp, lowestNewBuildCost, cities)
                                        select = c("Street.Address", "Postal.City", "lotSqFt", "list.Price.Num",
                                                   "houseSizeSqFt", "predictedSalePrice", 
                                                   "discountNewHousePerSquareFoot", 
-                                                  "profitPercentOfInvestment"))
+                                                  "profitPercentOfInvestment", "areaPriceCount", 
+                                                  "zipPriceCount", "cityPriceCount", "countyPriceCount"))
   } else {
     propProspectsReportShort <- subset(activeProp, discountNewHousePerSquareFoot <= lowestDiscount & 
                                          activeProp$Postal.City %in% cities,
                                        select = c("Street.Address", "Postal.City", "lotSqFt", "list.Price.Num",
                                                   "houseSizeSqFt", "predictedSalePrice", 
                                                   "discountNewHousePerSquareFoot", 
-                                                  "profitPercentOfInvestment"))
+                                                  "profitPercentOfInvestment", "areaPriceCount", 
+                                                  "zipPriceCount", "cityPriceCount", "countyPriceCount"))
   }
   names(propProspectsReportShort)[5] <- "projectedHouseSizeSqFt"
   
