@@ -177,7 +177,7 @@ tearDownFlip <- function(newBuildCost, lowestNewBuildCost){
   # than three years old. Than check the sale prices on those houses.
   
   propListSoldNew <- propListingsSold[as.numeric(propListingsSold$Age) <= 9, ]
-  
+
   propSoldOneYear <- propListSoldNew[propListSoldNew[,18] >= oneYear, ]
   
   # Use the "FD" method for making histograms
