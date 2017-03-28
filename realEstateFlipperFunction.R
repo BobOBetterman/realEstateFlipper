@@ -100,11 +100,11 @@ tearDownFlip <- function(newBuildCost, lowestNewBuildCost){
   
   
   # Remove all the properties that don't have a "sold" price
-  propListingsSold <- propListings[complete.cases(propListings[,29]),]
+  propListingsSold <- propListings[complete.cases(propListings[,39]),]
   
   propListingsSold$HOA.Fee <- 0
   
-  propListingsSold <- propListingsSold[complete.cases(propListingsSold),]
+#  propListingsSold <- propListingsSold[complete.cases(propListingsSold),]
   
   propListingsSold <- propListingsSold[propListingsSold$lotSqFt>0,]
   propListingsSold <- propListingsSold[propListingsSold$houseSqFt>0,]
@@ -140,9 +140,10 @@ tearDownFlip <- function(newBuildCost, lowestNewBuildCost){
   
   # Select only houses on lots over 2500 sqft, and that are less
   # than three years old. Than check the sale prices on those houses.
+  # Never mind. Don't do this. Use everything and see how that looks.
   
-  propListSoldNew <- propListingsSold[as.numeric(propListingsSold$Age) <= 9, ]
-    # propListSoldNew <- propListingsSold[propListingsSold$Age <= 9, ]
+  # propListSoldNew <- propListingsSold[as.numeric(propListingsSold$Age) <= 9, ]
+  propListSoldNew <- propListingsSold
 
   propSoldOneYear <- propListSoldNew[propListSoldNew[,18] >= oneYear, ]
   
@@ -159,13 +160,13 @@ tearDownFlip <- function(newBuildCost, lowestNewBuildCost){
   # meanLastYearCounty <- merge(meanLastYearCounty, table(factor(propSoldOneYear$County)), by.x = "Group.1", by.y = "Var1")
 
   
-  medianLastYearArea <- aggregate(propSoldOneYear[,30], list(propSoldOneYear$Area..), FUN = median)
+  medianLastYearArea <- aggregate(propSoldOneYear[,40], list(propSoldOneYear$Area..), FUN = median)
   medianLastYearArea <- merge(medianLastYearArea, table(factor(propSoldOneYear$Area..)), by.x = "Group.1", by.y = "Var1")
-  medianLastYearZip <- aggregate(propSoldOneYear[,30], list(propSoldOneYear$Zip.Code), FUN = median)
+  medianLastYearZip <- aggregate(propSoldOneYear[,40], list(propSoldOneYear$Zip.Code), FUN = median)
   medianLastYearZip <- merge(medianLastYearZip, table(factor(propSoldOneYear$Zip.Code)), by.x = "Group.1", by.y = "Var1")
-  medianLastYearCity <- aggregate(propSoldOneYear[,30], list(propSoldOneYear$Postal.City), FUN = median)
+  medianLastYearCity <- aggregate(propSoldOneYear[,40], list(propSoldOneYear$Postal.City), FUN = median)
   medianLastYearCity <- merge(medianLastYearCity, table(factor(propSoldOneYear$Postal.City)), by.x = "Group.1", by.y = "Var1")
-  medianLastYearCounty <- aggregate(propSoldOneYear[,30], list(propSoldOneYear$County), FUN = median)
+  medianLastYearCounty <- aggregate(propSoldOneYear[,40], list(propSoldOneYear$County), FUN = median)
   medianLastYearCounty <- merge(medianLastYearCounty, table(factor(propSoldOneYear$County)), by.x = "Group.1", by.y = "Var1")
 
   # Done with initial calculations.
@@ -183,7 +184,7 @@ tearDownFlip <- function(newBuildCost, lowestNewBuildCost){
   }  
   # This determines the proper house size ratio to use (making sure the numbers of samples are high enough)
   
-  propListingsActive[,32] <- ifelse(houseRatioByArea[match(propListingsActive$Area.., houseRatioByArea$Group.1),3]>minSampleSize &
+  propListingsActive[,42] <- ifelse(houseRatioByArea[match(propListingsActive$Area.., houseRatioByArea$Group.1),3]>minSampleSize &
                                       !is.na(houseRatioByArea[match(propListingsActive$Area.., houseRatioByArea$Group.1),3]>minSampleSize),
                                     houseRatioByArea[match(propListingsActive$Area.., houseRatioByArea$Group.1),2],
                                     ifelse(houseRatioByZip[match(propListingsActive$Zip.Code, houseRatioByZip$Group.1),3]>minSampleSize &
@@ -196,11 +197,11 @@ tearDownFlip <- function(newBuildCost, lowestNewBuildCost){
                                                   houseRatioByCounty[match(propListingsActive$County, 
                                                                            houseRatioByCounty$Group.1),2])))
   
-  names(propListingsActive)[32] <- "houseRatioNewBuild"
+  names(propListingsActive)[42] <- "houseRatioNewBuild"
   
   # This determines the proper $/sf to use (making sure the numbers of samples are high enough)
   
-  propListingsActive[,33] <- ifelse(medianLastYearArea[match(propListingsActive$Area.., medianLastYearArea$Group.1),3]>minSampleSize &
+  propListingsActive[,43] <- ifelse(medianLastYearArea[match(propListingsActive$Area.., medianLastYearArea$Group.1),3]>minSampleSize &
                                       !is.na(medianLastYearArea[match(propListingsActive$Area.., medianLastYearArea$Group.1),3]>minSampleSize),
                                     medianLastYearArea[match(propListingsActive$Area.., medianLastYearArea$Group.1),2],
                                     ifelse(medianLastYearZip[match(propListingsActive$Zip.Code, medianLastYearZip$Group.1),3]>minSampleSize &
@@ -218,22 +219,22 @@ tearDownFlip <- function(newBuildCost, lowestNewBuildCost){
   #                                          meanLastYearZip[match(propListingsActive$Zip.Code, meanLastYearZip$Group.1),2]} else {
   #                                          if(meanLastYearCity[match(propListingsActive$Postal.City, meanLastYearCity$Group.1),3]>minSampleSize) {
   #                                                 meanLastYearCity[match(propListingsActive$Postal.City, meanLastYearCity$Group.1),2]} else 1000}}
-  names(propListingsActive)[33] <- "houseDollarPerSFNewBuild"
+  names(propListingsActive)[43] <- "houseDollarPerSFNewBuild"
   
   # This is the size of house that can be built
   
-  propListingsActive[,34] <- pmin(propListingsActive$lotSqFt * propListingsActive$houseRatioNewBuild, houseSizeCap[match(propListingsActive$Area.., houseSizeCap$Group.1),2])
-  names(propListingsActive)[34] <- "houseSizeSqFt"
+  propListingsActive[,44] <- pmin(propListingsActive$lotSqFt * propListingsActive$houseRatioNewBuild, houseSizeCap[match(propListingsActive$Area.., houseSizeCap$Group.1),2])
+  names(propListingsActive)[44] <- "houseSizeSqFt"
   
   # Add a column for figuring out cost to build a new house
   
-  propListingsActive[,35] <- propListingsActive$houseSizeSqFt * newConsCostSqFt
-  names(propListingsActive)[35] <- "costToBuildHouse"
+  propListingsActive[,45] <- propListingsActive$houseSizeSqFt * newConsCostSqFt
+  names(propListingsActive)[45] <- "costToBuildHouse"
   
   # Figure out cost to buy the place and build a new house
   
-  propListingsActive[,36] <- propListingsActive[,31] + propListingsActive[,35]
-  names(propListingsActive)[36] <- "totalCostToBuild"
+  propListingsActive[,46] <- propListingsActive[,41] + propListingsActive[,45]
+  names(propListingsActive)[46] <- "totalCostToBuild"
   
   # Predicted sale price of newly built house.
   # Deduct 7% for commission, fees, etc.
@@ -241,30 +242,30 @@ tearDownFlip <- function(newBuildCost, lowestNewBuildCost){
   #predPriceFinal <- propListingsActive$houseDollarPerSFNewBuild * 0.93
   predPriceFinal <- propListingsActive$houseDollarPerSFNewBuild * 1
   
-  propListingsActive[,37] <- pmin(propListingsActive[,34] * predPriceFinal, housePriceCap[match(propListingsActive$Area.., houseSizeCap$Group.1),2])
-  names(propListingsActive)[37] <- "predictedSalePrice"
+  propListingsActive[,47] <- pmin(propListingsActive[,44] * predPriceFinal, housePriceCap[match(propListingsActive$Area.., houseSizeCap$Group.1),2])
+  names(propListingsActive)[47] <- "predictedSalePrice"
   
   # Figure out potential profit by comparing the difference between the predicted price and cost to build
   
-  propListingsActive[,38] <- (propListingsActive[,37] * 0.93) - 
-    propListingsActive[,36]
-  names(propListingsActive)[38] <- "potentialProfit"
+  propListingsActive[,48] <- (propListingsActive[,47] * 0.93) - 
+    propListingsActive[,46]
+  names(propListingsActive)[48] <- "potentialProfit"
   
   # Sort the listings to see which are the most profitable
   # Sort by the profit percentage instead
   
-  propListingsActive[,39] <- propListingsActive$potentialProfit / propListingsActive$totalCostToBuild
-  names(propListingsActive)[39] <- "profitPercentOfInvestment"
+  propListingsActive[,49] <- propListingsActive$potentialProfit / propListingsActive$totalCostToBuild
+  names(propListingsActive)[49] <- "profitPercentOfInvestment"
   
-  propListingsActive[,40] <- ((propListingsActive$predictedSalePrice * 0.93) -
+  propListingsActive[,50] <- ((propListingsActive$predictedSalePrice * 0.93) -
                                 propListingsActive$list.Price.Num) /
     propListingsActive$houseSizeSqFt
-  names(propListingsActive)[40] <- "breakEvenBuildCost"
+  names(propListingsActive)[50] <- "breakEvenBuildCost"
   
   propListingsActive[, "discountNewHousePerSquareFoot"] <- (propListingsActive$list.Price.Num / propListingsActive$houseSqFt) - 
     propListingsActive$houseDollarPerSFNewBuild
   
-  propListingsActive <- propListingsActive[order(-propListingsActive[,39]), ]
+  propListingsActive <- propListingsActive[order(-propListingsActive[,49]), ]
   
   # Add columns for each of the house ratio groups--put the counts in them, so we know which one the program is 
   # using
@@ -295,25 +296,25 @@ tearDownFlip <- function(newBuildCost, lowestNewBuildCost){
 # This function cleans the data--in other words, fixes some of the variable
 # types and adds some useful columns
 cleanData <- function(propListings) {
-  propListings[ , 26] <- as.numeric(gsub(",", "", as.character(propListings[ , 20])))
-  names(propListings)[26] <- "houseSqFt"
-  propListings[ , 27] <- as.numeric(gsub(",", "", as.character(propListings[ , 13])))
-  names(propListings)[27] <- "lotSqFt"
+  propListings[ , 36] <- as.numeric(gsub(",", "", as.character(propListings[ , 20])))
+  names(propListings)[36] <- "houseSqFt"
+  propListings[ , 37] <- as.numeric(gsub(",", "", as.character(propListings[ , 13])))
+  names(propListings)[37] <- "lotSqFt"
   
   
-  propListings[ , 28] <- propListings[ , 26] / propListings[ , 27]
-  names(propListings)[28] <- "house.To.Lot.Size.Ratio"
+  propListings[ , 38] <- propListings[ , 36] / propListings[ , 37]
+  names(propListings)[38] <- "house.To.Lot.Size.Ratio"
   
-  propListings[,29] <- (gsub(",", "", as.character(propListings[,19])))
-  propListings[,29] <- as.numeric(gsub("\\$", "", as.character(propListings[,29])))
-  names(propListings)[29] <- "sell.Price.Num"
+  propListings[,39] <- (gsub(",", "", as.character(propListings[,19])))
+  propListings[,39] <- as.numeric(gsub("\\$", "", as.character(propListings[,39])))
+  names(propListings)[39] <- "sell.Price.Num"
   
-  propListings[ , 30] <- propListings[ , 29] / propListings[ , 26]
-  names(propListings)[30] <- "$/SqFt.House.Num"
+  propListings[ , 40] <- propListings[ , 39] / propListings[ , 36]
+  names(propListings)[40] <- "$/SqFt.House.Num"
   
-  propListings[,31] <- (gsub(",", "", as.character(propListings[,11])))
-  propListings[,31] <- as.numeric(gsub("\\$", "", as.character(propListings[,31])))
-  names(propListings)[31] <- "list.Price.Num"
+  propListings[,41] <- (gsub(",", "", as.character(propListings[,11])))
+  propListings[,41] <- as.numeric(gsub("\\$", "", as.character(propListings[,41])))
+  names(propListings)[41] <- "list.Price.Num"
   
   # Eliminate all the listings with HOA fees, as they are probably
   # mistakenly listed as detached single family homes
