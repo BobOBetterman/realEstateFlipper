@@ -8,9 +8,9 @@ library(lubridate)
 library(mailR)
 
 # work computer address
-setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 # home computer address
-#setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
+setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 source("realEstateFlipperFunction.R")
 
@@ -28,10 +28,12 @@ if(file.exists("flipperStats.csv")) {
 
 #####################################################################################################################
 #####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
 # Andrew Hill
 #####################################################################################################################
 # Client name
-clientName <- "Victor Chiang"
+clientName <- "Andrew Hill"
 
 # The cost/sqft to build a new place
 buildCost <- 300
@@ -68,8 +70,130 @@ shortDiscountPropReport <- shortDiscountProspectsReport(listingRepData, lowestDi
 
 writeReports(longPropReport, shortTearDownPropReport, shortDiscountPropReport, clientName)
 
-if (nrow(shortTearDownPropReport) > 0 | nrow(shortDiscountPropReport > 0)) {
-  emailReports(recipients, subject, clientName, shortTearDownPropReport, shortDiscountPropReport)
+# if (nrow(shortTearDownPropReport) > 0 | nrow(shortDiscountPropReport > 0)) {
+#   emailReports(recipients, subject, clientName, shortTearDownPropReport, shortDiscountPropReport)
+# }
+
+if (nrow(longPropReport) > 0) {
+  emailLongReport(recipients, subject, clientName, longPropReport)
 }
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+
+
+
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+# Victor Chiang
+#####################################################################################################################
+# Client name
+clientName <- "Victor Chiang"
+
+# The cost/sqft to build a new place
+buildCost <- 300
+
+# Smallest discount to look at
+lowestDiscount <- -200
+
+# The cities to search in
+cities <- ""
+
+# Email information
+recipients <- c("vchiang@gmail.com")
+#####################################################
+#####################################################
+#####################################################
+
+
+# Lowest possible build price
+lowestBreakEvenBuild <- buildCost
+
+#clientFlipperReport(clientName, buildCost, lowestBreakEvenBuild, lowestDiscount, cities, recipients)
+
+subject <- paste("This Week's Results", "|", clientName, sep = " ")
+
+clientName <- gsub(" ", "", clientName, fixed = TRUE)
+
+# Function call to run the numbers
+listingRepData <- tearDownFlip(buildCost, lowestBreakEvenBuild)
+
+longPropReport <- longProspectsReport(listingRepData, cities)
+
+shortTearDownPropReport <- shortTearDownProspectsReport(listingRepData, lowestBreakEvenBuild, cities)
+shortDiscountPropReport <- shortDiscountProspectsReport(listingRepData, lowestDiscount, cities)
+
+writeReports(longPropReport, shortTearDownPropReport, shortDiscountPropReport, clientName)
+
+if (nrow(shortTearDownPropReport) > 0 | nrow(shortDiscountPropReport > 0)) {
+#  emailReports(recipients, subject, clientName, shortTearDownPropReport, shortDiscountPropReport)
+}
+
+# if (nrow(longPropReport) > 0) {
+#   emailLongReport(recipients, subject, clientName, longPropReport)
+# }
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+
+
+
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+# Slum Lords
+#####################################################################################################################
+# Client name
+clientName <- "Slum Lords"
+
+# The cost/sqft to build a new place
+buildCost <- 300
+
+# Smallest discount to look at
+lowestDiscount <- -200
+
+# The cities to search in
+cities <- ""
+
+# Email information
+recipients <- c("andy@tiberiusfo.com", "ssoria@gmail.com", "gmattd@gmail.com")
+#####################################################
+#####################################################
+#####################################################
+
+
+# Lowest possible build price
+lowestBreakEvenBuild <- buildCost
+
+#clientFlipperReport(clientName, buildCost, lowestBreakEvenBuild, lowestDiscount, cities, recipients)
+
+subject <- paste("This Week's Results", "|", clientName, sep = " ")
+
+clientName <- gsub(" ", "", clientName, fixed = TRUE)
+
+# Function call to run the numbers
+listingRepData <- tearDownFlip(buildCost, lowestBreakEvenBuild)
+
+longPropReport <- longProspectsReport(listingRepData, cities)
+
+shortTearDownPropReport <- shortTearDownProspectsReport(listingRepData, lowestBreakEvenBuild, cities)
+shortDiscountPropReport <- shortDiscountProspectsReport(listingRepData, lowestDiscount, cities)
+
+writeReports(longPropReport, shortTearDownPropReport, shortDiscountPropReport, clientName)
+
+# if (nrow(shortTearDownPropReport) > 0 | nrow(shortDiscountPropReport > 0)) {
+#   emailReports(recipients, subject, clientName, shortTearDownPropReport, shortDiscountPropReport)
+# }
+
+if (nrow(longPropReport) > 0) {
+#  emailLongReport(recipients, subject, clientName, longPropReport)
+}
+#####################################################################################################################
+#####################################################################################################################
 #####################################################################################################################
 #####################################################################################################################
