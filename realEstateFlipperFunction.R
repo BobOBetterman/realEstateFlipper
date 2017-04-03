@@ -348,7 +348,7 @@ addLatLong <- function(propListingsUpdate) {
   
   streetList <- ldply(seq(1, nrow(propListingsUpdate)), function(x) 
     {a <- tryCatch(street2coordinates(propListingsUpdate$propertyAddresses[x]), error=function(err) as.data.frame(NA))
-    if(nrow(a) == 0) {as.data.frame(NA)} else})
+    if(nrow(a) == 0) {as.data.frame(NA)} else{a}})
   
   propListingsUpdate[, "latitude"] <- streetList$latitude
   propListingsUpdate[, "longitude"] <- streetList$longitude
@@ -373,7 +373,8 @@ longProspectsReport <- function(activeProp, cities) {
                                              "Age", "DOM", "Street.Address", "Area..", "Zip.Code",
                                              "Postal.City", "County", "areaRatioCount", "zipRatioCount", 
                                              "cityRatioCount", "countyRatioCount", "areaPriceCount", 
-                                             "zipPriceCount", "cityPriceCount", "countyPriceCount"))
+                                             "zipPriceCount", "cityPriceCount", "countyPriceCount", 
+                                             "compPropCount", "compProps"))
   } else {
 
     propProspectsReport <- subset(activeProp, profitPercentOfInvestment >= lowestProfit & 
@@ -385,7 +386,8 @@ longProspectsReport <- function(activeProp, cities) {
                                              "Age", "DOM", "Street.Address", "Area..", "Zip.Code",
                                              "Postal.City", "County", "areaRatioCount", "zipRatioCount", 
                                              "cityRatioCount", "countyRatioCount", "areaPriceCount", 
-                                             "zipPriceCount", "cityPriceCount", "countyPriceCount"))
+                                             "zipPriceCount", "cityPriceCount", "countyPriceCount", 
+                                             "compPropCount", "compProps"))
   }
   
   return(propProspectsReport)
@@ -394,7 +396,7 @@ longProspectsReport <- function(activeProp, cities) {
 
 
 # This function will add the nearby comps to the report.
-addCompsReport <- function(longListReport) {
+addCompsReport <- function(baseListData) {
   compRangePercent <- 0.1
   
   highComp <- 1 + compRangePercent
@@ -412,18 +414,27 @@ addCompsReport <- function(longListReport) {
   
   propSoldOneYear <- propListSoldNew[propListSoldNew[,18] >= oneYear, ]
   
-  propMLS <- sapply(x <- seq(1, length(longListReport$profitPercentOfInvestment)), function(x) 
-    {subset(propSoldOneYear, Area.. == longListReport$Area..[x] & sell.Price.Num > 
-              longListReport$predictedSalePrice[x]*lowComp & sell.Price.Num < 
-              longListReport$predictedSalePrice[x]*highComp & houseSqFt > 
-              longListReport$houseSizeSqFt[x]*lowComp & houseSqFt < 
-              longListReport$houseSizeSqFt[x]*highComp)$MLS.Number})
+  propMLS <- sapply(x <- seq(1, length(baseListData$profitPercentOfInvestment)), function(x) 
+    {subset(propSoldOneYear, Area.. == baseListData$Area..[x] & sell.Price.Num > 
+              baseListData$predictedSalePrice[x]*lowComp & sell.Price.Num < 
+              baseListData$predictedSalePrice[x]*highComp & houseSqFt > 
+              baseListData$houseSizeSqFt[x]*lowComp & houseSqFt < 
+              baseListData$houseSizeSqFt[x]*highComp)$MLS.Number})
   
-  # distHaversine()
+
+  # Algorithm to determine the properties that have sold nearby
+  propSoldOneYearLoc <- propSoldOneYear[complete.cases(propSoldOneYear$latLongConf), ]
+  baseListLoc <- baseListData[complete.cases(baseListData$latLongConf), ]
+  
+  propSoldMat <- matrix(c(propSoldOneYearLoc$longitude, propSoldOneYearLoc$latitude), ncol = 2)
+  locMat <- matrix(c(baseListLoc$longitude, baseListLoc$latitude), ncol = 2)
+  
+  #distTest <- distHaversine(locMat[1, ], propSoldMat)
   
   compList <- sapply(x <- seq(1, length(propMLS)), function(x) {paste0(propMLS[[x]], collapse = ", ")})
   
-  compReport <- longListReport
+  compReport <- baseListData
+  compReport[, "compPropCount"] <- lengths(propMLS)
   compReport[, "compProps"] <- compList
   
   return(compReport)
@@ -440,7 +451,7 @@ shortTearDownProspectsReport <- function(activeProp, lowestNewBuildCost, cities)
                                                   "breakEvenBuildCost", 
                                                   "profitPercentOfInvestment", 
                                                   "areaPriceCount", "zipPriceCount", "cityPriceCount", 
-                                                  "countyPriceCount"))
+                                                  "countyPriceCount", "compPropCount", "compProps"))
   } else {
     propProspectsReportShort <- subset(activeProp, breakEvenBuildCost >= lowestNewBuildCost & 
                                          activeProp$Postal.City %in% cities,
@@ -449,7 +460,7 @@ shortTearDownProspectsReport <- function(activeProp, lowestNewBuildCost, cities)
                                                   "breakEvenBuildCost", 
                                                   "profitPercentOfInvestment", 
                                                   "areaPriceCount", "zipPriceCount", "cityPriceCount", 
-                                                  "countyPriceCount"))
+                                                  "countyPriceCount", "compPropCount", "compProps"))
   }
   names(propProspectsReportShort)[5] <- "projectedHouseSizeSqFt"
   
@@ -464,17 +475,17 @@ shortDiscountProspectsReport <- function(activeProp, lowestNewBuildCost, cities)
     propProspectsReportShort <- subset(activeProp, discountNewHousePerSquareFoot <= lowestDiscount,
                                        select = c("Street.Address", "Postal.City", "lotSqFt", "list.Price.Num",
                                                   "houseSizeSqFt", "predictedSalePrice", 
-                                                  "discountNewHousePerSquareFoot", 
-                                                  "profitPercentOfInvestment", "areaPriceCount", 
-                                                  "zipPriceCount", "cityPriceCount", "countyPriceCount"))
+                                                  "discountNewHousePerSquareFoot", "areaPriceCount", 
+                                                  "zipPriceCount", "cityPriceCount", "countyPriceCount", 
+                                                  "compPropCount", "compProps"))
   } else {
     propProspectsReportShort <- subset(activeProp, discountNewHousePerSquareFoot <= lowestDiscount & 
                                          activeProp$Postal.City %in% cities,
                                        select = c("Street.Address", "Postal.City", "lotSqFt", "list.Price.Num",
                                                   "houseSizeSqFt", "predictedSalePrice", 
-                                                  "discountNewHousePerSquareFoot", 
-                                                  "profitPercentOfInvestment", "areaPriceCount", 
-                                                  "zipPriceCount", "cityPriceCount", "countyPriceCount"))
+                                                  "discountNewHousePerSquareFoot", "areaPriceCount", 
+                                                  "zipPriceCount", "cityPriceCount", "countyPriceCount", 
+                                                  "compPropCount", "compProps"))
   }
   names(propProspectsReportShort)[5] <- "projectedHouseSizeSqFt"
   

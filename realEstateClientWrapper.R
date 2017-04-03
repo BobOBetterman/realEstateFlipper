@@ -11,9 +11,9 @@ library(geosphere)
 library(plyr)
 
 # work computer address
-#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 # home computer address
-setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
+#setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 source("realEstateFlipperFunction.R")
 
@@ -64,15 +64,16 @@ subject <- paste("This Week's Results", "|", clientName, sep = " ")
 clientName <- gsub(" ", "", clientName, fixed = TRUE)
 
 # Function call to run the numbers
-listingRepData <- tearDownFlip(buildCost, lowestBreakEvenBuild)
+baseListData <- tearDownFlip(buildCost, lowestBreakEvenBuild)
+listingRepData <- addCompsReport(baseListData)
 
 longListReport <- longProspectsReport(listingRepData, cities)
-longPropReport <- addCompsReport(longListReport)
+#longPropReport <- addCompsReport(longListReport)
 
 shortTearDownPropReport <- shortTearDownProspectsReport(listingRepData, lowestBreakEvenBuild, cities)
 shortDiscountPropReport <- shortDiscountProspectsReport(listingRepData, lowestDiscount, cities)
 
-writeReports(longPropReport, shortTearDownPropReport, shortDiscountPropReport, clientName)
+writeReports(longListReport, shortTearDownPropReport, shortDiscountPropReport, clientName)
 
 # if (nrow(shortTearDownPropReport) > 0 | nrow(shortDiscountPropReport) > 0) {
 #   emailReports(recipients, subject, clientName, shortTearDownPropReport, shortDiscountPropReport)
@@ -123,15 +124,16 @@ subject <- paste("This Week's Results", "|", clientName, sep = " ")
 clientName <- gsub(" ", "", clientName, fixed = TRUE)
 
 # Function call to run the numbers
-listingRepData <- tearDownFlip(buildCost, lowestBreakEvenBuild)
+baseListData <- tearDownFlip(buildCost, lowestBreakEvenBuild)
+listingRepData <- addCompsReport(baseListData)
 
 longListReport <- longProspectsReport(listingRepData, cities)
-longPropReport <- addCompsReport(longListReport)
+#longPropReport <- addCompsReport(longListReport)
 
 shortTearDownPropReport <- shortTearDownProspectsReport(listingRepData, lowestBreakEvenBuild, cities)
 shortDiscountPropReport <- shortDiscountProspectsReport(listingRepData, lowestDiscount, cities)
 
-writeReports(longPropReport, shortTearDownPropReport, shortDiscountPropReport, clientName)
+writeReports(longListReport, shortTearDownPropReport, shortDiscountPropReport, clientName)
 
 if (nrow(shortTearDownPropReport) > 0 | nrow(shortDiscountPropReport) > 0) {
 #  emailReports(recipients, subject, clientName, shortTearDownPropReport, shortDiscountPropReport)
@@ -182,15 +184,16 @@ subject <- paste("This Week's Results", "|", clientName, sep = " ")
 clientName <- gsub(" ", "", clientName, fixed = TRUE)
 
 # Function call to run the numbers
-listingRepData <- tearDownFlip(buildCost, lowestBreakEvenBuild)
+baseListData <- tearDownFlip(buildCost, lowestBreakEvenBuild)
+listingRepData <- addCompsReport(baseListData)
 
 longListReport <- longProspectsReport(listingRepData, cities)
-longPropReport <- addCompsReport(longListReport)
+#longPropReport <- addCompsReport(longListReport)
 
 shortTearDownPropReport <- shortTearDownProspectsReport(listingRepData, lowestBreakEvenBuild, cities)
 shortDiscountPropReport <- shortDiscountProspectsReport(listingRepData, lowestDiscount, cities)
 
-writeReports(longPropReport, shortTearDownPropReport, shortDiscountPropReport, clientName)
+writeReports(longListReport, shortTearDownPropReport, shortDiscountPropReport, clientName)
 
 # if (nrow(shortTearDownPropReport) > 0 | nrow(shortDiscountPropReport) > 0) {
 #   emailReports(recipients, subject, clientName, shortTearDownPropReport, shortDiscountPropReport)
@@ -241,15 +244,16 @@ subject <- paste("This Week's Results", "|", clientName, sep = " ")
 clientName <- gsub(" ", "", clientName, fixed = TRUE)
 
 # Function call to run the numbers
-listingRepData <- tearDownFlip(buildCost, lowestBreakEvenBuild)
+baseListData <- tearDownFlip(buildCost, lowestBreakEvenBuild)
+listingRepData <- addCompsReport(baseListData)
 
 longListReport <- longProspectsReport(listingRepData, cities)
-longPropReport <- addCompsReport(longListReport)
+#longPropReport <- addCompsReport(longListReport)
 
 shortTearDownPropReport <- shortTearDownProspectsReport(listingRepData, lowestBreakEvenBuild, cities)
 shortDiscountPropReport <- shortDiscountProspectsReport(listingRepData, lowestDiscount, cities)
 
-writeReports(longPropReport, shortTearDownPropReport, shortDiscountPropReport, clientName)
+writeReports(longListReport, shortTearDownPropReport, shortDiscountPropReport, clientName)
 
 if (nrow(shortTearDownPropReport) > 0 | nrow(shortDiscountPropReport) > 0) {
 #  emailReports(recipients, subject, clientName, shortTearDownPropReport, shortDiscountPropReport)
