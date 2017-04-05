@@ -37,6 +37,7 @@ updateListings <- function() {
   }
   
   
+  write.csv(propListingsUpdate, "flipperStats.csv", row.names = FALSE)
   write.csv(propCombined, "flipperAll.csv", row.names = FALSE)
 }
 
@@ -449,18 +450,14 @@ shortTearDownProspectsReport <- function(activeProp, lowestNewBuildCost, cities)
                                        select = c("Street.Address", "Postal.City", "lotSqFt", "list.Price.Num",
                                                   "houseSizeSqFt", "predictedSalePrice", 
                                                   "breakEvenBuildCost", 
-                                                  "profitPercentOfInvestment", 
-                                                  "areaPriceCount", "zipPriceCount", "cityPriceCount", 
-                                                  "countyPriceCount", "compPropCount", "compProps"))
+                                                  "profitPercentOfInvestment", "compPropCount"))
   } else {
     propProspectsReportShort <- subset(activeProp, breakEvenBuildCost >= lowestNewBuildCost & 
                                          activeProp$Postal.City %in% cities,
                                        select = c("Street.Address", "Postal.City", "lotSqFt", "list.Price.Num",
                                                   "houseSizeSqFt", "predictedSalePrice", 
                                                   "breakEvenBuildCost", 
-                                                  "profitPercentOfInvestment", 
-                                                  "areaPriceCount", "zipPriceCount", "cityPriceCount", 
-                                                  "countyPriceCount", "compPropCount", "compProps"))
+                                                  "profitPercentOfInvestment", "compPropCount"))
   }
   names(propProspectsReportShort)[5] <- "projectedHouseSizeSqFt"
   
@@ -475,17 +472,15 @@ shortDiscountProspectsReport <- function(activeProp, lowestNewBuildCost, cities)
     propProspectsReportShort <- subset(activeProp, discountNewHousePerSquareFoot <= lowestDiscount,
                                        select = c("Street.Address", "Postal.City", "lotSqFt", "list.Price.Num",
                                                   "houseSizeSqFt", "predictedSalePrice", 
-                                                  "discountNewHousePerSquareFoot", "areaPriceCount", 
-                                                  "zipPriceCount", "cityPriceCount", "countyPriceCount", 
-                                                  "compPropCount", "compProps"))
+                                                  "discountNewHousePerSquareFoot",  
+                                                  "compPropCount"))
   } else {
     propProspectsReportShort <- subset(activeProp, discountNewHousePerSquareFoot <= lowestDiscount & 
                                          activeProp$Postal.City %in% cities,
                                        select = c("Street.Address", "Postal.City", "lotSqFt", "list.Price.Num",
                                                   "houseSizeSqFt", "predictedSalePrice", 
-                                                  "discountNewHousePerSquareFoot", "areaPriceCount", 
-                                                  "zipPriceCount", "cityPriceCount", "countyPriceCount", 
-                                                  "compPropCount", "compProps"))
+                                                  "discountNewHousePerSquareFoot", 
+                                                  "compPropCount"))
   }
   names(propProspectsReportShort)[5] <- "projectedHouseSizeSqFt"
   
