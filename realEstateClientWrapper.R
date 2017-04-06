@@ -11,9 +11,9 @@ library(geosphere)
 library(plyr)
 
 # work computer address
-setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
+#setwd("C:/cygwin64/home/hill/TFO/realEstateFlipper")
 # home computer address
-#setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
+setwd("D:/programming/work/realEstateFlipper/realEstateFlipper")
 
 source("realEstateFlipperFunction.R")
 
@@ -136,7 +136,7 @@ shortDiscountPropReport <- shortDiscountProspectsReport(listingRepData, lowestDi
 writeReports(longListReport, shortTearDownPropReport, shortDiscountPropReport, clientName)
 
 if (nrow(shortTearDownPropReport) > 0 | nrow(shortDiscountPropReport) > 0) {
-  emailReports(recipients, subject, clientName, shortTearDownPropReport, shortDiscountPropReport)
+#  emailReports(recipients, subject, clientName, shortTearDownPropReport, shortDiscountPropReport)
 }
 
 # if (nrow(longListReport) > 0) {
@@ -200,7 +200,7 @@ writeReports(longListReport, shortTearDownPropReport, shortDiscountPropReport, c
 # }
 
 if (nrow(longListReport) > 0) {
-  emailLongReport(recipients, subject, clientName, longListReport)
+#  emailLongReport(recipients, subject, clientName, longListReport)
 }
 #####################################################################################################################
 #####################################################################################################################
@@ -256,7 +256,7 @@ shortDiscountPropReport <- shortDiscountProspectsReport(listingRepData, lowestDi
 writeReports(longListReport, shortTearDownPropReport, shortDiscountPropReport, clientName)
 
 if (nrow(shortTearDownPropReport) > 0 | nrow(shortDiscountPropReport) > 0) {
-  emailReports(recipients, subject, clientName, shortTearDownPropReport, shortDiscountPropReport)
+#  emailReports(recipients, subject, clientName, shortTearDownPropReport, shortDiscountPropReport)
 }
 
 # if (nrow(longListReport) > 0) {
