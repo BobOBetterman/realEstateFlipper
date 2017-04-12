@@ -5,3 +5,5 @@ originalData/
 .RData
 realEstateClientWrapper.R
 realEstateRegressionClientWrapper.R
+realEstateFlipperFunction.R
+realEstateRegression.R
