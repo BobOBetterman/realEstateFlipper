@@ -4,6 +4,5 @@ originalData/
 .Rhistory
 .RData
 realEstateClientWrapper.R
-realEstateRegressionClientWrapper.R
 realEstateFlipperFunction.R
 privateFlipperFunctions.R

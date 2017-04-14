@@ -294,7 +294,7 @@ longProspectsReport <- function(activeProp, cities) {
   # This is the lowest percentage of profit we're willing to risk investing for
   lowestProfit <- 0.1
   
-  if(cities[1] == "" & length(cities) == 1){
+  if(is.na(cities[1]) & length(cities) == 1){
     propProspectsReport <- subset(activeProp, profitPercentOfInvestment >= lowestProfit,
                                   select = c("profitPercentOfInvestment", "MLS.Number",
                                              "houseRatioNewBuild", "houseSizeSqFt", "list.Price.Num",
@@ -374,7 +374,7 @@ longProspectsReport <- function(activeProp, cities) {
 
 # This function makes the short version that Victor likes, and will go to clients
 shortTearDownProspectsReport <- function(activeProp, lowestNewBuildCost, cities) {
-  if(cities[1] == "" & length(cities) == 1) {
+  if(is.na(cities[1]) & length(cities) == 1) {
     propProspectsReportShort <- subset(activeProp, breakEvenBuildCost >= lowestNewBuildCost,
                                        select = c("Street.Address", "Postal.City", "lotSqFt", "list.Price.Num",
                                                   "houseSizeSqFt", "predictedSalePrice", 
@@ -397,7 +397,7 @@ shortTearDownProspectsReport <- function(activeProp, lowestNewBuildCost, cities)
 
 
 shortDiscountProspectsReport <- function(activeProp, lowestNewBuildCost, cities) {
-  if(cities[1] == "" & length(cities) == 1) {
+  if(is.na(cities[1]) & length(cities) == 1) {
     propProspectsReportShort <- subset(activeProp, discountNewHousePerSquareFoot <= lowestDiscount,
                                        select = c("Street.Address", "Postal.City", "lotSqFt", "list.Price.Num",
                                                   "houseSizeSqFt", "predictedSalePrice", 
